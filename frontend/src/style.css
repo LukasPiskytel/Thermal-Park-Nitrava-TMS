@@ -2,12 +2,16 @@
   --bg-main: #212121;
   --bg-accent: #1a2738;
   --card-bg: rgba(16, 42, 67, 0.58);
-  --text-main: #ffffff;
+  --white: #ffffff;
+  --blue: #55b1ff;
+  --green: #49d17d;
+  --red: #ff4d57;
+  --text-main: var(--white);
   --text-soft: #b9d4ec;
-  --border: rgba(111, 180, 237, 0.45);
-  --up: #49d17d;
-  --down: #55b1ff;
-  --stable: #ffffff;
+  --border: rgba(85, 177, 255, 0.45);
+  --up: var(--red);
+  --down: var(--blue);
+  --stable: var(--green);
 }
 
 * {
@@ -44,7 +48,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.8rem;
-  color: var(--text-soft);
+  color: var(--blue);
   margin: 0;
 }
 
@@ -83,19 +87,33 @@ h1 {
 .pool-card h2 {
   margin: 0;
   font-size: 1.03rem;
-  color: var(--text-main);
+  color: var(--blue);
 }
 
 .temperature {
   margin: 0.65rem 0;
   font-size: 1.85rem;
   font-weight: 700;
+  color: var(--green);
+}
+
+.temp-up {
+  color: var(--green);
+}
+
+.temp-down {
+  color: var(--green);
+}
+
+.temp-stable {
+  color: var(--green);
 }
 
 .trend {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  color: var(--text-soft);
   font-weight: 600;
   font-size: 0.92rem;
   padding: 0.3rem 0.55rem;
@@ -103,22 +121,40 @@ h1 {
   border: 1px solid transparent;
 }
 
+.trend-arrow {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.arrow-up {
+  color: var(--red);
+}
+
+.arrow-down {
+  color: var(--blue);
+}
+
+.arrow-stable {
+  color: var(--green);
+}
+
 .trend-up {
-  color: var(--up);
-  border-color: rgba(73, 209, 125, 0.5);
-  background: rgba(73, 209, 125, 0.18);
+  color: var(--red);
+  border-color: rgba(255, 77, 87, 0.5);
+  background: rgba(255, 77, 87, 0.16);
 }
 
 .trend-down {
-  color: var(--down);
+  color: var(--blue);
   border-color: rgba(85, 177, 255, 0.5);
   background: rgba(85, 177, 255, 0.18);
 }
 
 .trend-stable {
-  color: var(--stable);
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.14);
+  color: var(--green);
+  border-color: rgba(73, 209, 125, 0.5);
+  background: rgba(73, 209, 125, 0.16);
 }
 
 @keyframes rise-in {
