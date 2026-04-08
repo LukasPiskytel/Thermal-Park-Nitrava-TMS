@@ -65,7 +65,7 @@ onBeforeUnmount(() => {
   <main class="dashboard">
     <header class="hero">
       <p class="eyebrow">Thermal Park Nitrava</p>
-      <h1>Pool Temperature Monitoring</h1>
+      <h1>Monitorovanie teplôt bazénov (Zimná časť)</h1>
       <p class="status">{{ fetchedAtLabel }}</p>
     </header>
 
