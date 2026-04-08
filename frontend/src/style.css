@@ -1,13 +1,13 @@
 :root {
-  --bg-main: #f3f8fb;
-  --bg-accent: #dbeff4;
-  --card-bg: rgba(255, 255, 255, 0.8);
-  --text-main: #112533;
-  --text-soft: #4f6775;
-  --border: rgba(17, 37, 51, 0.12);
-  --up: #13795b;
-  --down: #b34e25;
-  --stable: #35546a;
+  --bg-main: #212121;
+  --bg-accent: #1a2738;
+  --card-bg: rgba(16, 42, 67, 0.58);
+  --text-main: #ffffff;
+  --text-soft: #b9d4ec;
+  --border: rgba(111, 180, 237, 0.45);
+  --up: #49d17d;
+  --down: #55b1ff;
+  --stable: #ffffff;
 }
 
 * {
@@ -20,8 +20,8 @@ body {
   font-family: 'Manrope', 'Trebuchet MS', 'Segoe UI', sans-serif;
   color: var(--text-main);
   background:
-    radial-gradient(circle at 12% 15%, rgba(104, 171, 199, 0.3), transparent 38%),
-    radial-gradient(circle at 88% 85%, rgba(240, 159, 98, 0.25), transparent 35%),
+    radial-gradient(circle at 12% 15%, rgba(73, 209, 125, 0.22), transparent 38%),
+    radial-gradient(circle at 88% 85%, rgba(85, 177, 255, 0.2), transparent 35%),
     linear-gradient(160deg, var(--bg-main), var(--bg-accent));
 }
 
@@ -61,7 +61,7 @@ h1 {
 }
 
 .error {
-  color: #8d2f2f;
+  color: #ffffff;
 }
 
 .pool-grid {
@@ -76,7 +76,7 @@ h1 {
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 1rem;
-  box-shadow: 0 10px 22px rgba(17, 37, 51, 0.08);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
   animation: rise-in 480ms ease-out;
 }
 
@@ -105,20 +105,20 @@ h1 {
 
 .trend-up {
   color: var(--up);
-  border-color: rgba(19, 121, 91, 0.28);
-  background: rgba(19, 121, 91, 0.1);
+  border-color: rgba(73, 209, 125, 0.5);
+  background: rgba(73, 209, 125, 0.18);
 }
 
 .trend-down {
   color: var(--down);
-  border-color: rgba(179, 78, 37, 0.28);
-  background: rgba(179, 78, 37, 0.1);
+  border-color: rgba(85, 177, 255, 0.5);
+  background: rgba(85, 177, 255, 0.18);
 }
 
 .trend-stable {
   color: var(--stable);
-  border-color: rgba(53, 84, 106, 0.28);
-  background: rgba(53, 84, 106, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 @keyframes rise-in {
