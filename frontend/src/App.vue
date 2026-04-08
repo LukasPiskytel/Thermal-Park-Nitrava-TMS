@@ -78,7 +78,6 @@ onBeforeUnmount(() => {
         <p class="temperature">{{ pool.temperature.toFixed(1) }} °C</p>
         <p class="trend" :class="`trend-${pool.trend}`">
           <span>{{ trendIcon(pool.trend) }}</span>
-          <span>{{ trendText(pool.trend) }} (last 3 fetches)</span>
         </p>
       </article>
     </section>
