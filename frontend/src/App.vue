@@ -75,9 +75,10 @@ onBeforeUnmount(() => {
     <section v-else class="pool-grid">
       <article v-for="pool in pools" :key="pool.id" class="pool-card">
         <h2>{{ pool.name }}</h2>
-        <p class="temperature">{{ pool.temperature.toFixed(1) }} °C</p>
+        <p class="temperature" :class="`temp-${pool.trend}`">{{ pool.temperature.toFixed(1) }} °C</p>
         <p class="trend" :class="`trend-${pool.trend}`">
-          <span>{{ trendIcon(pool.trend) }}</span>
+          <span class="trend-arrow" :class="`arrow-${pool.trend}`">{{ trendIcon(pool.trend) }}</span>
+          <span>{{ trendText(pool.trend) }}</span>
         </p>
       </article>
     </section>
