@@ -1,0 +1,133 @@
+:root {
+  --bg-main: #f3f8fb;
+  --bg-accent: #dbeff4;
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --text-main: #112533;
+  --text-soft: #4f6775;
+  --border: rgba(17, 37, 51, 0.12);
+  --up: #13795b;
+  --down: #b34e25;
+  --stable: #35546a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Manrope', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at 12% 15%, rgba(104, 171, 199, 0.3), transparent 38%),
+    radial-gradient(circle at 88% 85%, rgba(240, 159, 98, 0.25), transparent 35%),
+    linear-gradient(160deg, var(--bg-main), var(--bg-accent));
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.dashboard {
+  width: min(1100px, 100% - 2rem);
+  margin: 0 auto;
+  padding: 2.5rem 0 3rem;
+}
+
+.hero {
+  margin-bottom: 1.5rem;
+  animation: rise-in 400ms ease-out;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(1.6rem, 3.5vw, 2.7rem);
+  line-height: 1.15;
+  margin: 0.3rem 0 0.6rem;
+}
+
+.status,
+.error {
+  margin: 0.3rem 0 1rem;
+  color: var(--text-soft);
+}
+
+.error {
+  color: #8d2f2f;
+}
+
+.pool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.pool-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 10px 22px rgba(17, 37, 51, 0.08);
+  animation: rise-in 480ms ease-out;
+}
+
+.pool-card h2 {
+  margin: 0;
+  font-size: 1.03rem;
+  color: var(--text-main);
+}
+
+.temperature {
+  margin: 0.65rem 0;
+  font-size: 1.85rem;
+  font-weight: 700;
+}
+
+.trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.trend-up {
+  color: var(--up);
+  border-color: rgba(19, 121, 91, 0.28);
+  background: rgba(19, 121, 91, 0.1);
+}
+
+.trend-down {
+  color: var(--down);
+  border-color: rgba(179, 78, 37, 0.28);
+  background: rgba(179, 78, 37, 0.1);
+}
+
+.trend-stable {
+  color: var(--stable);
+  border-color: rgba(53, 84, 106, 0.28);
+  background: rgba(53, 84, 106, 0.1);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
