@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api/pools';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/pools';
 
 export const apiUrls = {
   pools: API_BASE_URL,
