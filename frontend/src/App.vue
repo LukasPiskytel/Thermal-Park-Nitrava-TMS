@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 const API_URL = 'http://localhost:3001/api/pools';
 const REFRESH_API_URL = 'http://localhost:3001/api/pools/refresh';
+const ASEKO_LOGO_URL = '/aseko-logo-black.svg';
 const FIVE_MINUTES = 5 * 60 * 1000;
 
 const pools = ref([]);
@@ -111,7 +112,16 @@ onBeforeUnmount(() => {
 
     <section v-else class="pool-grid">
       <article v-for="pool in pools" :key="pool.id" class="pool-card">
-        <h2>{{ pool.name }}</h2>
+        <div class="pool-card-header">
+          <h2>{{ pool.name }}</h2>
+          <img
+            v-if="pool.source === 'aseko'"
+            class="aseko-logo"
+            :src="ASEKO_LOGO_URL"
+            alt="ASEKO"
+            loading="lazy"
+          />
+        </div>
         <p class="temperature" :class="`temp-${pool.trend}`">{{ pool.temperature.toFixed(1) }} °C</p>
         <p class="trend" :class="`trend-${pool.trend}`">
           <span class="trend-arrow" :class="`arrow-${pool.trend}`">{{ trendIcon(pool.trend) }}</span>
