@@ -164,17 +164,6 @@ h1 {
   cursor: pointer;
 }
 
-.pool-card-clickable::after {
-  content: 'Klik pre detail';
-  position: absolute;
-  top: 0.35rem;
-  right: 0.6rem;
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(185, 212, 236, 0.8);
-}
-
 .card-up {
   --card-accent: var(--red);
 }
@@ -199,7 +188,7 @@ h1 {
   font-size: 0.98rem;
   line-height: 1.25;
   font-weight: 700;
-  color: var(--blue);
+  color: var(--white);
 }
 
 .source-slot {
