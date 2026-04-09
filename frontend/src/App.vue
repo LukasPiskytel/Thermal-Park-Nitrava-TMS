@@ -17,9 +17,9 @@ function trendIcon(trend) {
 }
 
 function trendText(trend) {
-  if (trend === 'up') return 'Rising';
-  if (trend === 'down') return 'Falling';
-  return 'Stable';
+  if (trend === 'up') return 'Stúpa';
+  if (trend === 'down') return 'Klesá';
+  return 'Stabilná';
 }
 
 async function loadData() {
@@ -43,10 +43,10 @@ async function loadData() {
 
 const fetchedAtLabel = computed(() => {
   if (!fetchedAt.value) {
-    return 'Waiting for first fetch...';
+    return 'Čaká sa na načítanie dát...';
   }
 
-  return `Last fetched: ${new Date(fetchedAt.value).toLocaleString()}`;
+  return `Posledné načítanie: ${new Date(fetchedAt.value).toLocaleString()}`;
 });
 
 onMounted(async () => {
@@ -70,7 +70,7 @@ onBeforeUnmount(() => {
     </header>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-    <p v-else-if="isLoading" class="status">Loading data...</p>
+    <p v-else-if="isLoading" class="status">Načítavanie dát...</p>
 
     <section v-else class="pool-grid">
       <article v-for="pool in pools" :key="pool.id" class="pool-card">
