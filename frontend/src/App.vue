@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { apiUrls, fetchJson } from './shared/api';
-import { formatDateDMY, formatTemperature } from './shared/formatters';
+import { formatDateTimeHMS, formatTemperature } from './shared/formatters';
 
 const ASEKO_LOGO_URL = '/aseko-logo-black.svg';
 const FIVE_MINUTES = 5 * 60 * 1000;
@@ -70,7 +70,7 @@ const fetchedAtLabel = computed(() => {
     return 'Čaká sa na načítanie dát...';
   }
 
-  return `Posledné načítanie: ${formatDateDMY(fetchedAt.value)}`;
+  return `Posledné načítanie: ${formatDateTimeHMS(fetchedAt.value)}`;
 });
 
 onMounted(async () => {
