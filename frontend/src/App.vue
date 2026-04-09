@@ -1,8 +1,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { apiUrls, fetchJson } from './shared/api';
+import { formatDateDMY, formatTemperature } from './shared/formatters';
 
-const API_URL = 'http://localhost:3001/api/pools';
-const REFRESH_API_URL = 'http://localhost:3001/api/pools/refresh';
 const ASEKO_LOGO_URL = '/aseko-logo-black.svg';
 const FIVE_MINUTES = 5 * 60 * 1000;
 
@@ -25,28 +25,6 @@ function trendText(trend) {
   return 'Stabilná';
 }
 
-function formatTemperature(value) {
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    return '--.-';
-  }
-
-  return value.toFixed(1);
-}
-
-function formatDateDMY(value) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return '-';
-  }
-
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = String(date.getFullYear());
-
-  return `${day}.${month}.${year}`;
-}
-
 function openPoolDetails(pool) {
   window.location.href = `/detail.html?poolId=${encodeURIComponent(String(pool.id))}`;
 }
@@ -58,13 +36,7 @@ function applyPoolsData(data) {
 
 async function loadData() {
   try {
-    const response = await fetch(API_URL);
-
-    if (!response.ok) {
-      throw new Error('Nepodarilo sa načítať teplotné údaje');
-    }
-
-    const data = await response.json();
+    const data = await fetchJson(apiUrls.pools, {}, 'Nepodarilo sa načítať teplotné údaje');
     applyPoolsData(data);
     errorMessage.value = '';
   } catch (error) {
@@ -78,13 +50,11 @@ async function refreshNow() {
   isRefreshing.value = true;
 
   try {
-    const response = await fetch(REFRESH_API_URL, { method: 'POST' });
-
-    if (!response.ok) {
-      throw new Error('Nepodarilo sa aktualizovať teploty');
-    }
-
-    const data = await response.json();
+    const data = await fetchJson(
+      apiUrls.refresh,
+      { method: 'POST' },
+      'Nepodarilo sa aktualizovať teploty',
+    );
     applyPoolsData(data);
     errorMessage.value = '';
   } catch (error) {
