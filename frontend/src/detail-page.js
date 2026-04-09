@@ -292,7 +292,6 @@ function render() {
       </header>
 
       <h1 class="header-title">${escapeHtml(detail.name)} - detail</h1>
-      <p class="header-subtitle">Zobrazene su vsetky zaznamenane teploty, typ fetchu a grafovy priebeh.</p>
 
       ${renderSummary(detail)}
 
