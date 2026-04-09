@@ -9,6 +9,8 @@ const ASEKO_KEY_FILE_PATH =
   process.env.ASEKO_KEY_FILE_PATH || path.resolve(__dirname, '..', '..', 'aseko-api-key.txt');
 const POOLS_STATE_FILE_PATH =
   process.env.POOLS_STATE_FILE_PATH || path.resolve(__dirname, '..', 'data', 'pools-state.json');
+const POOLS_BACKUP_DIR_PATH =
+  process.env.POOLS_BACKUP_DIR_PATH || path.resolve(__dirname, '..', 'data', 'backups');
 
 const ASEKO_CLIENT_HEADERS = {
   'X-Client-Name': 'Thermal Park Nitrava Temperature Monitoring System',
@@ -38,6 +40,7 @@ module.exports = {
   ASEKO_API_BASE_URL,
   ASEKO_KEY_FILE_PATH,
   POOLS_STATE_FILE_PATH,
+  POOLS_BACKUP_DIR_PATH,
   ASEKO_CLIENT_HEADERS,
   POOL_DEFINITIONS,
 };

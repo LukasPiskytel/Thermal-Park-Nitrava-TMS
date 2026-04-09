@@ -1,6 +1,6 @@
 const { POOL_DEFINITIONS, STATS_WINDOW_MS } = require('./config');
 const { loadAsekoConfig, fetchAsekoTemperature } = require('./aseko-client');
-const { readPersistedState, writePersistedState } = require('./state-store');
+const { readPersistedState, writePersistedState, appendExpiredDataBackups } = require('./state-store');
 const {
   generateSimulatedTemperature,
   updatePoolTemperature,
@@ -147,12 +147,51 @@ function buildStatePayload() {
   };
 }
 
+function collectAndPruneExpiredData(referenceMs = Date.now()) {
+  const thresholdMs = referenceMs - STATS_WINDOW_MS;
+  const expiredEntries = [];
+
+  pools.forEach((pool) => {
+    pool.statsHistory24h = pool.statsHistory24h.filter((sample) => sample.fetchedAtMs >= thresholdMs);
+
+    const keptLogEntries = [];
+
+    pool.fetchLog.forEach((sample) => {
+      if (sample.fetchedAtMs < thresholdMs) {
+        expiredEntries.push({
+          poolId: pool.id,
+          poolName: pool.name,
+          fetchedAtMs: sample.fetchedAtMs,
+          temperature: sample.temperature,
+          fetchType: sample.fetchType,
+          source: sample.source,
+        });
+        return;
+      }
+
+      keptLogEntries.push(sample);
+    });
+
+    pool.fetchLog = keptLogEntries;
+  });
+
+  return expiredEntries;
+}
+
 async function persistPoolsState() {
   await writePersistedState(buildStatePayload());
 }
 
 async function initializeTemperatureService() {
   const restored = await loadPersistedPoolsState();
+
+  const expiredEntries = collectAndPruneExpiredData(Date.now());
+
+  if (expiredEntries.length > 0) {
+    await appendExpiredDataBackups(expiredEntries);
+    await persistPoolsState();
+    console.log(`[INFO] Archived ${expiredEntries.length} expired records to daily JSON backups.`);
+  }
 
   if (restored) {
     console.log('[INFO] Persisted pool data loaded from disk.');
@@ -218,6 +257,13 @@ async function fetchTemperatureData(fetchType = 'auto') {
   const sampleAtMs = Date.now();
   await Promise.all(pools.map((pool) => refreshPoolTemperature(pool, sampleAtMs, fetchType)));
   lastFetchAt = new Date();
+
+  const expiredEntries = collectAndPruneExpiredData(sampleAtMs);
+
+  if (expiredEntries.length > 0) {
+    await appendExpiredDataBackups(expiredEntries);
+  }
+
   await persistPoolsState();
 }
 
