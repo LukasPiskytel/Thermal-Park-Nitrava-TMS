@@ -139,7 +139,7 @@ function render() {
       ${renderSummary(detail)}
 
       <section class="panel">
-        <h2>Graf teploty (os Y: teplota, os X: cas)</h2>
+        <h2>Graf teploty</h2>
         ${buildDetailChart(fetchLog, escapeHtml)}
       </section>
 
