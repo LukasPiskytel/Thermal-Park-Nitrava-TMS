@@ -1,5 +1,6 @@
-const { POOL_DEFINITIONS } = require('./config');
+const { POOL_DEFINITIONS, STATS_WINDOW_MS } = require('./config');
 const { loadAsekoConfig, fetchAsekoTemperature } = require('./aseko-client');
+const { readPersistedState, writePersistedState } = require('./state-store');
 const {
   generateSimulatedTemperature,
   updatePoolTemperature,
@@ -38,6 +39,126 @@ function getPoolsSummary() {
 function getPoolDetails(poolId) {
   const pool = getPoolById(poolId);
   return pool ? buildPoolDetails(pool) : null;
+}
+
+function normalizeSample(rawSample) {
+  if (!rawSample || typeof rawSample !== 'object') {
+    return null;
+  }
+
+  const temperatureValue = Number(rawSample.temperature);
+  const fetchedAtMsValue = Number(rawSample.fetchedAtMs);
+
+  if (!Number.isFinite(temperatureValue) || !Number.isFinite(fetchedAtMsValue)) {
+    return null;
+  }
+
+  return {
+    temperature: Number(temperatureValue.toFixed(1)),
+    fetchedAtMs: Math.trunc(fetchedAtMsValue),
+    fetchType: rawSample.fetchType === 'manual' ? 'manual' : 'auto',
+    source: rawSample.source === 'aseko' ? 'aseko' : 'simulated',
+  };
+}
+
+function restorePoolFromSnapshot(pool, snapshotPool, statsThresholdMs) {
+  if (!snapshotPool || typeof snapshotPool !== 'object') {
+    return;
+  }
+
+  const currentTempValue = Number(snapshotPool.currentTemp);
+
+  if (Number.isFinite(currentTempValue)) {
+    pool.currentTemp = Number(currentTempValue.toFixed(1));
+  }
+
+  if (typeof snapshotPool.deviceId === 'string' && snapshotPool.deviceId.trim()) {
+    pool.deviceId = snapshotPool.deviceId.trim();
+  }
+
+  if (snapshotPool.source === 'aseko' || snapshotPool.source === 'simulated') {
+    pool.source = snapshotPool.source;
+  }
+
+  if (Array.isArray(snapshotPool.history)) {
+    pool.history = snapshotPool.history
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value))
+      .map((value) => Number(value.toFixed(1)))
+      .slice(-3);
+  }
+
+  if (Array.isArray(snapshotPool.statsHistory24h)) {
+    pool.statsHistory24h = snapshotPool.statsHistory24h
+      .map((sample) => normalizeSample(sample))
+      .filter((sample) => sample && sample.fetchedAtMs >= statsThresholdMs);
+  }
+
+  if (Array.isArray(snapshotPool.fetchLog)) {
+    pool.fetchLog = snapshotPool.fetchLog.map((sample) => normalizeSample(sample)).filter(Boolean);
+  }
+}
+
+async function loadPersistedPoolsState() {
+  const persistedState = await readPersistedState();
+
+  if (!persistedState) {
+    return false;
+  }
+
+  const statsThresholdMs = Date.now() - STATS_WINDOW_MS;
+
+  if (Array.isArray(persistedState.pools)) {
+    const poolById = new Map(
+      persistedState.pools
+        .map((pool) => [Number(pool?.id), pool])
+        .filter(([id]) => Number.isInteger(id)),
+    );
+
+    pools.forEach((pool) => {
+      restorePoolFromSnapshot(pool, poolById.get(pool.id), statsThresholdMs);
+    });
+  }
+
+  if (typeof persistedState.lastFetchAt === 'string') {
+    const parsedDate = new Date(persistedState.lastFetchAt);
+
+    if (!Number.isNaN(parsedDate.getTime())) {
+      lastFetchAt = parsedDate;
+    }
+  }
+
+  return true;
+}
+
+function buildStatePayload() {
+  return {
+    version: 1,
+    lastFetchAt: lastFetchAt ? lastFetchAt.toISOString() : null,
+    pools: pools.map((pool) => ({
+      id: pool.id,
+      currentTemp: pool.currentTemp,
+      history: [...pool.history],
+      statsHistory24h: pool.statsHistory24h.map((sample) => ({ ...sample })),
+      fetchLog: pool.fetchLog.map((sample) => ({ ...sample })),
+      source: pool.source,
+      deviceId: pool.deviceId,
+    })),
+  };
+}
+
+async function persistPoolsState() {
+  await writePersistedState(buildStatePayload());
+}
+
+async function initializeTemperatureService() {
+  const restored = await loadPersistedPoolsState();
+
+  if (restored) {
+    console.log('[INFO] Persisted pool data loaded from disk.');
+  }
+
+  await applyAsekoConfig();
 }
 
 async function applyAsekoConfig() {
@@ -97,6 +218,7 @@ async function fetchTemperatureData(fetchType = 'auto') {
   const sampleAtMs = Date.now();
   await Promise.all(pools.map((pool) => refreshPoolTemperature(pool, sampleAtMs, fetchType)));
   lastFetchAt = new Date();
+  await persistPoolsState();
 }
 
 async function runFetchCycle(fetchType = 'auto') {
@@ -116,6 +238,7 @@ async function runFetchCycle(fetchType = 'auto') {
 }
 
 module.exports = {
+  initializeTemperatureService,
   applyAsekoConfig,
   runFetchCycle,
   getLastFetchAt,

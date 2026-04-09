@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { PORT, FETCH_INTERVAL_MS } = require('./src/config');
 const {
-  applyAsekoConfig,
+  initializeTemperatureService,
   runFetchCycle,
   getLastFetchAt,
   getPoolsSummary,
@@ -12,12 +12,6 @@ const {
 const { buildPoolsResponse, buildPoolDetailsResponse } = require('./src/http-responses');
 
 const app = express();
-applyAsekoConfig().finally(() => {
-  runFetchCycle('auto');
-  setInterval(() => {
-    runFetchCycle('auto');
-  }, FETCH_INTERVAL_MS);
-});
 
 app.use(cors());
 app.use(express.json());
@@ -54,6 +48,20 @@ app.post('/api/pools/refresh', async (_req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Temperature API running on http://localhost:${PORT}`);
+async function startServer() {
+  await initializeTemperatureService();
+
+  app.listen(PORT, () => {
+    console.log(`Temperature API running on http://localhost:${PORT}`);
+  });
+
+  runFetchCycle('auto');
+  setInterval(() => {
+    runFetchCycle('auto');
+  }, FETCH_INTERVAL_MS);
+}
+
+startServer().catch((error) => {
+  console.error(`[ERROR] Failed to start server: ${error.message}`);
+  process.exit(1);
 });
