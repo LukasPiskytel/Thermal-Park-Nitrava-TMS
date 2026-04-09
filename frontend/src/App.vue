@@ -11,7 +11,10 @@ const isLoading = ref(true);
 const isRefreshing = ref(false);
 const errorMessage = ref('');
 const fetchedAt = ref('');
+const nextFetchInMs = ref(FIVE_MINUTES);
+const nowMs = ref(Date.now());
 let timerId = null;
+let countdownTimerId = null;
 
 function trendIcon(trend) {
   if (trend === 'up') return '↑';
@@ -32,6 +35,19 @@ function openPoolDetails(pool) {
 function applyPoolsData(data) {
   pools.value = data.pools ?? [];
   fetchedAt.value = data.fetchedAt ?? '';
+
+  const interval = Number(data.nextFetchInMs);
+  nextFetchInMs.value = Number.isFinite(interval) && interval > 0 ? interval : FIVE_MINUTES;
+  nowMs.value = Date.now();
+}
+
+function formatCountdownHMS(durationMs) {
+  const totalSeconds = Math.max(0, Math.ceil(durationMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 async function loadData() {
@@ -73,14 +89,36 @@ const fetchedAtLabel = computed(() => {
   return `Posledné načítanie: ${formatDateTimeHMS(fetchedAt.value)}`;
 });
 
+const nextFetchLabel = computed(() => {
+  if (!fetchedAt.value) {
+    return 'Ďalšie načítanie o --:--:--';
+  }
+
+  const fetchedAtMs = new Date(fetchedAt.value).getTime();
+
+  if (Number.isNaN(fetchedAtMs)) {
+    return 'Ďalšie načítanie o --:--:--';
+  }
+
+  const remainingMs = fetchedAtMs + nextFetchInMs.value - nowMs.value;
+  return `Ďalšie načítanie o ${formatCountdownHMS(remainingMs)}`;
+});
+
 onMounted(async () => {
   await loadData();
   timerId = window.setInterval(loadData, FIVE_MINUTES);
+  countdownTimerId = window.setInterval(() => {
+    nowMs.value = Date.now();
+  }, 1000);
 });
 
 onBeforeUnmount(() => {
   if (timerId) {
     window.clearInterval(timerId);
+  }
+
+  if (countdownTimerId) {
+    window.clearInterval(countdownTimerId);
   }
 });
 </script>
@@ -91,7 +129,10 @@ onBeforeUnmount(() => {
       <p class="eyebrow">Thermal Park Nitrava</p>
       <h1>Monitorovanie teplôt bazénov (Zimná časť)</h1>
       <div class="header-row">
-        <p class="status">{{ fetchedAtLabel }}</p>
+        <div class="status-stack">
+          <p class="status">{{ fetchedAtLabel }}</p>
+          <p class="status next-fetch">{{ nextFetchLabel }}</p>
+        </div>
         <button
           type="button"
           class="refresh-button"
