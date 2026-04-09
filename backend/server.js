@@ -6,6 +6,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const FETCH_INTERVAL_MS = 5 * 60 * 1000;
+const STATS_WINDOW_MS = 24 * 60 * 60 * 1000;
 const ASEKO_API_BASE_URL = 'https://api.aseko.cloud/api/v1/paired-units';
 const ASEKO_KEY_FILE_PATH =
   process.env.ASEKO_KEY_FILE_PATH || path.resolve(__dirname, '..', 'aseko-api-key.txt');
@@ -35,7 +36,9 @@ const pools = poolDefinitions.map((pool) => ({
   deviceId: pool.defaultDeviceId ?? null,
   currentTemp: 0,
   history: [],
-  source: 'simulated',
+  statsHistory24h: [],
+  fetchLog: [],
+  source: pool.deviceIdKey ? 'aseko' : 'simulated',
 }));
 
 let lastFetchAt = null;
@@ -161,7 +164,7 @@ function generateSimulatedTemperature(pool) {
   return clamp(baseline + variation, 27, 41);
 }
 
-function updatePoolTemperature(pool, temperature, source) {
+function updatePoolTemperature(pool, temperature, source, sampleAtMs = Date.now(), fetchType = 'auto') {
   pool.currentTemp = Number(temperature.toFixed(1));
   pool.history.push(pool.currentTemp);
 
@@ -169,38 +172,81 @@ function updatePoolTemperature(pool, temperature, source) {
     pool.history.shift();
   }
 
+  const sample = {
+    temperature: pool.currentTemp,
+    fetchedAtMs: sampleAtMs,
+    fetchType,
+    source,
+  };
+
+  pool.statsHistory24h.push(sample);
+  pool.fetchLog.push(sample);
+
+  const thresholdMs = sampleAtMs - STATS_WINDOW_MS;
+  pool.statsHistory24h = pool.statsHistory24h.filter((item) => item.fetchedAtMs >= thresholdMs);
+
   pool.source = source;
 }
 
-async function refreshPoolTemperature(pool) {
-  if (pool.deviceId) {
+function get24hStats(pool) {
+  if (pool.statsHistory24h.length === 0) {
+    return {
+      minTemp24h: null,
+      maxTemp24h: null,
+      avgTemp24h: null,
+    };
+  }
+
+  const values = pool.statsHistory24h.map((sample) => sample.temperature);
+  const minTemp = Math.min(...values);
+  const maxTemp = Math.max(...values);
+  const avgTemp = values.reduce((sum, value) => sum + value, 0) / values.length;
+
+  return {
+    minTemp24h: Number(minTemp.toFixed(1)),
+    maxTemp24h: Number(maxTemp.toFixed(1)),
+    avgTemp24h: Number(avgTemp.toFixed(1)),
+  };
+}
+
+async function refreshPoolTemperature(pool, sampleAtMs, fetchType) {
+  const isAsekoPool = Boolean(pool.deviceIdKey);
+
+  if (isAsekoPool) {
+    if (!pool.deviceId) {
+      pool.source = 'aseko';
+      console.warn(`[WARN] Missing device ID for ASEKO pool ${pool.name}.`);
+      return;
+    }
+
     try {
       const asekoTemperature = await fetchAsekoTemperature(pool.deviceId);
-      updatePoolTemperature(pool, asekoTemperature, 'aseko');
+      updatePoolTemperature(pool, asekoTemperature, 'aseko', sampleAtMs, fetchType);
       return;
     } catch (error) {
-      console.warn(
-        `[WARN] Falling back to simulation for ${pool.name} (${pool.deviceId}): ${error.message}`,
-      );
+      pool.source = 'aseko';
+      console.warn(`[WARN] ASEKO fetch failed for ${pool.name} (${pool.deviceId}): ${error.message}`);
+      return;
     }
   }
 
   const simulatedTemperature = generateSimulatedTemperature(pool);
-  updatePoolTemperature(pool, simulatedTemperature, 'simulated');
+  updatePoolTemperature(pool, simulatedTemperature, 'simulated', sampleAtMs, fetchType);
 }
 
-async function fetchTemperatureData() {
-  await Promise.all(pools.map((pool) => refreshPoolTemperature(pool)));
+async function fetchTemperatureData(fetchType = 'auto') {
+  const sampleAtMs = Date.now();
+  await Promise.all(pools.map((pool) => refreshPoolTemperature(pool, sampleAtMs, fetchType)));
   lastFetchAt = new Date();
 }
 
-async function runFetchCycle() {
+async function runFetchCycle(fetchType = 'auto') {
   if (currentFetchPromise) {
     return currentFetchPromise;
   }
 
   currentFetchPromise = (async () => {
-    await fetchTemperatureData();
+    await fetchTemperatureData(fetchType);
   })();
 
   try {
@@ -210,25 +256,46 @@ async function runFetchCycle() {
   }
 }
 
-function buildPoolsResponse() {
+function buildPoolSummary(pool) {
+  const stats24h = get24hStats(pool);
+
   return {
-    fetchedAt: lastFetchAt ? lastFetchAt.toISOString() : null,
-    nextFetchInMs: FETCH_INTERVAL_MS,
-    pools: pools.map((pool) => ({
-      id: pool.id,
-      name: pool.name,
-      deviceId: pool.deviceId,
-      temperature: pool.currentTemp,
-      trend: getTrend(pool.history),
-      history: [...pool.history],
-      source: pool.source,
+    id: pool.id,
+    name: pool.name,
+    deviceId: pool.deviceId,
+    temperature: pool.currentTemp,
+    trend: getTrend(pool.history),
+    history: [...pool.history],
+    source: pool.source,
+    ...stats24h,
+  };
+}
+
+function buildPoolDetails(pool) {
+  return {
+    ...buildPoolSummary(pool),
+    fetchLog: pool.fetchLog.map((sample) => ({
+      timestamp: new Date(sample.fetchedAtMs).toISOString(),
+      fetchType: sample.fetchType,
+      temperature: sample.temperature,
+      source: sample.source,
     })),
   };
 }
 
+function buildPoolsResponse() {
+  return {
+    fetchedAt: lastFetchAt ? lastFetchAt.toISOString() : null,
+    nextFetchInMs: FETCH_INTERVAL_MS,
+    pools: pools.map((pool) => buildPoolSummary(pool)),
+  };
+}
+
 loadAsekoConfigFromFile().finally(() => {
-  runFetchCycle();
-  setInterval(runFetchCycle, FETCH_INTERVAL_MS);
+  runFetchCycle('auto');
+  setInterval(() => {
+    runFetchCycle('auto');
+  }, FETCH_INTERVAL_MS);
 });
 
 app.use(cors());
@@ -238,9 +305,30 @@ app.get('/api/pools', (_req, res) => {
   res.json(buildPoolsResponse());
 });
 
+app.get('/api/pools/:poolId/details', (req, res) => {
+  const poolId = Number(req.params.poolId);
+
+  if (!Number.isInteger(poolId)) {
+    res.status(400).json({ message: 'Neplatne ID bazena.' });
+    return;
+  }
+
+  const pool = pools.find((item) => item.id === poolId);
+
+  if (!pool) {
+    res.status(404).json({ message: 'Bazen nebol najdeny.' });
+    return;
+  }
+
+  res.json({
+    fetchedAt: lastFetchAt ? lastFetchAt.toISOString() : null,
+    pool: buildPoolDetails(pool),
+  });
+});
+
 app.post('/api/pools/refresh', async (_req, res) => {
   try {
-    await runFetchCycle();
+    await runFetchCycle('manual');
     res.json(buildPoolsResponse());
   } catch (error) {
     console.error(`[ERROR] Manual refresh failed: ${error.message}`);

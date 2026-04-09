@@ -1,0 +1,218 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+  --bg-main: #212121;
+  --bg-accent: #1a2738;
+  --white: #ffffff;
+  --blue: #55b1ff;
+  --green: #49d17d;
+  --red: #ff4d57;
+  --text-soft: #b9d4ec;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Sora', 'Trebuchet MS', sans-serif;
+  color: var(--white);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(85, 177, 255, 0.2), transparent 38%),
+    radial-gradient(circle at 85% 90%, rgba(73, 209, 125, 0.15), transparent 40%),
+    linear-gradient(165deg, var(--bg-main), var(--bg-accent));
+}
+
+.detail-page {
+  width: min(1160px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.4rem 0 2.2rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.back-link,
+.refresh-button {
+  border-radius: 10px;
+  padding: 0.52rem 0.88rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+}
+
+.back-link {
+  border: 1px solid rgba(85, 177, 255, 0.55);
+  background: rgba(85, 177, 255, 0.14);
+  color: var(--white);
+}
+
+.refresh-button {
+  border: 1px solid rgba(73, 209, 125, 0.6);
+  background: rgba(73, 209, 125, 0.16);
+  color: var(--white);
+  cursor: pointer;
+}
+
+.refresh-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.header-title {
+  margin: 0.85rem 0 0.25rem;
+  font-size: clamp(1.45rem, 3.2vw, 2.3rem);
+  line-height: 1.16;
+}
+
+.header-subtitle {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.status,
+.error {
+  margin-top: 1rem;
+  color: var(--text-soft);
+}
+
+.error {
+  color: #ffd6d9;
+}
+
+.summary-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.55rem;
+}
+
+.summary-item {
+  border: 1px solid rgba(85, 177, 255, 0.32);
+  border-radius: 12px;
+  background: rgba(7, 24, 38, 0.72);
+  padding: 0.6rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.summary-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-soft);
+}
+
+.summary-value {
+  font-size: 1.1rem;
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.panel {
+  margin-top: 0.9rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(85, 177, 255, 0.35);
+  background: rgba(5, 19, 31, 0.58);
+}
+
+.panel h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+  color: var(--blue);
+}
+
+.chart-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.chart {
+  width: 100%;
+  min-width: 620px;
+  height: 300px;
+  border-radius: 10px;
+  background:
+    linear-gradient(to top, rgba(255, 255, 255, 0.08) 1px, transparent 1px) 0 0 / 100% 20%,
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 20% 100%,
+    rgba(8, 27, 43, 0.92);
+}
+
+.axis-line {
+  stroke: rgba(185, 212, 236, 0.6);
+  stroke-width: 1;
+}
+
+.axis-grid {
+  stroke: rgba(185, 212, 236, 0.2);
+  stroke-width: 0.8;
+}
+
+.axis-label,
+.tick-label {
+  fill: var(--text-soft);
+  font-size: 4px;
+}
+
+.line {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.point {
+  fill: var(--green);
+}
+
+.table-wrap {
+  max-height: 340px;
+  overflow: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(85, 177, 255, 0.25);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+th,
+td {
+  padding: 0.5rem 0.58rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(85, 177, 255, 0.2);
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: rgba(10, 31, 49, 0.96);
+  color: var(--blue);
+}
+
+@media (max-width: 760px) {
+  .detail-page {
+    width: calc(100% - 1rem);
+    padding-top: 1rem;
+  }
+
+  .chart {
+    min-width: 520px;
+  }
+}

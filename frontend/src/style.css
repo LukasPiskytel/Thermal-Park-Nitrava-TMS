@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
 :root {
   --bg-main: #212121;
   --bg-accent: #1a2738;
@@ -21,7 +23,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: 'Manrope', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  font-family: 'Sora', 'Trebuchet MS', sans-serif;
   color: var(--text-main);
   background:
     radial-gradient(circle at 12% 15%, rgba(73, 209, 125, 0.22), transparent 38%),
@@ -103,46 +105,137 @@ h1 {
 .pool-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.9rem;
+  gap: 1rem;
 }
 
 .pool-card {
-  background: var(--card-bg);
-  backdrop-filter: blur(6px);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1rem;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+  --card-accent: var(--green);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(125% 110% at 10% 0%, rgba(85, 177, 255, 0.13), transparent 60%),
+    radial-gradient(120% 100% at 100% 100%, rgba(73, 209, 125, 0.13), transparent 60%),
+    linear-gradient(165deg, rgba(10, 29, 46, 0.96), rgba(8, 20, 34, 0.95));
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(85, 177, 255, 0.32);
+  border-radius: 16px;
+  padding: 0.95rem 0.95rem 0.9rem;
+  box-shadow:
+    0 18px 30px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   animation: rise-in 480ms ease-out;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.pool-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-top: 3px solid var(--card-accent);
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.pool-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(85, 177, 255, 0.58);
+  box-shadow:
+    0 22px 36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.pool-card-clickable {
+  cursor: pointer;
+}
+
+.pool-card-clickable::after {
+  content: 'Klik pre detail';
+  position: absolute;
+  top: 0.35rem;
+  right: 0.6rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(185, 212, 236, 0.8);
+}
+
+.card-up {
+  --card-accent: var(--red);
+}
+
+.card-down {
+  --card-accent: var(--blue);
+}
+
+.card-stable {
+  --card-accent: var(--green);
 }
 
 .pool-card-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
 .pool-card h2 {
   margin: 0;
-  font-size: 1.03rem;
+  font-size: 0.98rem;
+  line-height: 1.25;
+  font-weight: 700;
   color: var(--blue);
 }
 
+.source-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: 28px;
+}
+
 .aseko-logo {
-  width: 64px;
+  width: 58px;
   height: auto;
-  padding: 0.2rem 0.35rem;
+  padding: 0.16rem 0.32rem;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.93);
   border: 1px solid rgba(85, 177, 255, 0.45);
 }
 
+.sim-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(85, 177, 255, 0.45);
+  background: rgba(85, 177, 255, 0.2);
+  color: var(--blue);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .temperature {
-  margin: 0.65rem 0;
-  font-size: 1.85rem;
+  margin: 0.72rem 0 0.52rem;
+  font-size: 1.7rem;
   font-weight: 700;
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
   color: var(--green);
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.temp-value {
+  letter-spacing: -0.02em;
+}
+
+.temp-unit {
+  font-size: 1.02rem;
+  opacity: 0.85;
+  padding-bottom: 0.15rem;
 }
 
 .temp-up {
@@ -203,6 +296,186 @@ h1 {
   color: var(--green);
   border-color: rgba(73, 209, 125, 0.5);
   background: rgba(73, 209, 125, 0.16);
+}
+
+.stats-24h {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-item {
+  padding: 0.54rem 0.62rem;
+  border-radius: 11px;
+  border: 1px solid rgba(85, 177, 255, 0.34);
+  border-left: 3px solid rgba(85, 177, 255, 0.75);
+  background: linear-gradient(145deg, rgba(6, 21, 35, 0.72), rgba(7, 25, 41, 0.56));
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.stat-item:nth-child(2) {
+  border-left-color: rgba(255, 77, 87, 0.85);
+}
+
+.stat-item:nth-child(3) {
+  border-left-color: rgba(73, 209, 125, 0.85);
+}
+
+.stat-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(185, 212, 236, 0.92);
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  line-height: 1;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+  letter-spacing: -0.01em;
+  color: var(--white);
+}
+
+.pool-detail {
+  margin-top: 1.45rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(85, 177, 255, 0.35);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(85, 177, 255, 0.12), transparent 45%),
+    linear-gradient(165deg, rgba(8, 25, 41, 0.95), rgba(6, 18, 30, 0.95));
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.detail-header h2 {
+  margin: 0;
+  font-size: 1.16rem;
+  color: var(--blue);
+}
+
+.detail-close {
+  border: 1px solid rgba(85, 177, 255, 0.65);
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  background: rgba(85, 177, 255, 0.15);
+  color: var(--white);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.detail-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.55rem;
+}
+
+.detail-summary-item {
+  padding: 0.55rem 0.64rem;
+  border-radius: 10px;
+  border: 1px solid rgba(85, 177, 255, 0.32);
+  background: rgba(5, 19, 31, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail-label {
+  font-size: 0.68rem;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.detail-chart-card,
+.detail-log-card {
+  margin-top: 0.9rem;
+  padding: 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(85, 177, 255, 0.28);
+  background: rgba(5, 19, 31, 0.42);
+}
+
+.detail-chart-card h3,
+.detail-log-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.94rem;
+  color: var(--blue);
+}
+
+.detail-chart {
+  width: 100%;
+  height: 180px;
+  border-radius: 10px;
+  background:
+    linear-gradient(to top, rgba(255, 255, 255, 0.08) 1px, transparent 1px) 0 0 / 100% 20%,
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 20% 100%,
+    rgba(7, 24, 38, 0.9);
+}
+
+.detail-chart-line {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.detail-log-table-wrap {
+  max-height: 290px;
+  overflow: auto;
+  border-radius: 9px;
+  border: 1px solid rgba(85, 177, 255, 0.25);
+}
+
+.detail-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.detail-log-table th,
+.detail-log-table td {
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(85, 177, 255, 0.18);
+}
+
+.detail-log-table th {
+  position: sticky;
+  top: 0;
+  background: rgba(10, 31, 48, 0.95);
+  color: var(--blue);
+}
+
+@media (max-width: 640px) {
+  .pool-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pool-card {
+    padding: 0.9rem 0.9rem 0.86rem;
+  }
 }
 
 @keyframes rise-in {

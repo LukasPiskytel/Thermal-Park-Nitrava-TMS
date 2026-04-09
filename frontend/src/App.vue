@@ -25,6 +25,18 @@ function trendText(trend) {
   return 'Stabilná';
 }
 
+function formatTemperature(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return '--.-';
+  }
+
+  return value.toFixed(1);
+}
+
+function openPoolDetails(pool) {
+  window.location.href = `/detail.html?poolId=${encodeURIComponent(String(pool.id))}`;
+}
+
 function applyPoolsData(data) {
   pools.value = data.pools ?? [];
   fetchedAt.value = data.fetchedAt ?? '';
@@ -111,22 +123,48 @@ onBeforeUnmount(() => {
     <p v-else-if="isLoading" class="status">Načítavanie dát...</p>
 
     <section v-else class="pool-grid">
-      <article v-for="pool in pools" :key="pool.id" class="pool-card">
+      <article
+        v-for="pool in pools"
+        :key="pool.id"
+        class="pool-card"
+        :class="['pool-card-clickable', `card-${pool.trend}`]"
+        @click="openPoolDetails(pool)"
+      >
         <div class="pool-card-header">
           <h2>{{ pool.name }}</h2>
-          <img
-            v-if="pool.source === 'aseko'"
-            class="aseko-logo"
-            :src="ASEKO_LOGO_URL"
-            alt="ASEKO"
-            loading="lazy"
-          />
+          <div class="source-slot">
+            <img
+              v-if="pool.source === 'aseko'"
+              class="aseko-logo"
+              :src="ASEKO_LOGO_URL"
+              alt="ASEKO"
+              loading="lazy"
+            />
+            <span v-else class="sim-badge">SIM</span>
+          </div>
         </div>
-        <p class="temperature" :class="`temp-${pool.trend}`">{{ pool.temperature.toFixed(1) }} °C</p>
+        <p class="temperature" :class="`temp-${pool.trend}`">
+          <span class="temp-value">{{ formatTemperature(pool.temperature) }}</span>
+          <span class="temp-unit">°C</span>
+        </p>
         <p class="trend" :class="`trend-${pool.trend}`">
           <span class="trend-arrow" :class="`arrow-${pool.trend}`">{{ trendIcon(pool.trend) }}</span>
           <span>{{ trendText(pool.trend) }}</span>
         </p>
+        <div class="stats-24h">
+          <div class="stat-item">
+            <span class="stat-label">Min 24h</span>
+            <span class="stat-value">{{ formatTemperature(pool.minTemp24h) }} °C</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Max 24h</span>
+            <span class="stat-value">{{ formatTemperature(pool.maxTemp24h) }} °C</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Priemer 24h</span>
+            <span class="stat-value">{{ formatTemperature(pool.avgTemp24h) }} °C</span>
+          </div>
+        </div>
       </article>
     </section>
   </main>
