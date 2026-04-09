@@ -27,7 +27,7 @@ async function loadData() {
     const response = await fetch(API_URL);
 
     if (!response.ok) {
-      throw new Error('Failed to fetch temperature data');
+      throw new Error('Nepodarilo sa načítať teplotné údaje');
     }
 
     const data = await response.json();
@@ -35,7 +35,7 @@ async function loadData() {
     fetchedAt.value = data.fetchedAt ?? '';
     errorMessage.value = '';
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Unknown error';
+    errorMessage.value = error instanceof Error ? error.message : 'Neznáma chyba';
   } finally {
     isLoading.value = false;
   }
