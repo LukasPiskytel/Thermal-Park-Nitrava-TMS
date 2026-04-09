@@ -25,7 +25,7 @@ function trendIcon(trend) {
 function trendText(trend) {
   if (trend === 'up') return 'Stúpa';
   if (trend === 'down') return 'Klesá';
-  return 'Stabilná';
+  return 'Stabilný';
 }
 
 function openPoolDetails(pool) {
@@ -97,7 +97,7 @@ const nextFetchLabel = computed(() => {
   const fetchedAtMs = new Date(fetchedAt.value).getTime();
 
   if (Number.isNaN(fetchedAtMs)) {
-    return 'Ďalšia aktualizácia o --:--:--';
+    return 'Ďalšia aktualizácia o: --:--:--';
   }
 
   const remainingMs = fetchedAtMs + nextFetchInMs.value - nowMs.value;

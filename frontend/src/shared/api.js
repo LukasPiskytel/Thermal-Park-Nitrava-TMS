@@ -6,7 +6,7 @@ export const apiUrls = {
   poolDetails: (poolId) => `${API_BASE_URL}/${poolId}/details`,
 };
 
-export async function fetchJson(url, options = {}, defaultErrorMessage = 'Request failed') {
+export async function fetchJson(url, options = {}, defaultErrorMessage = 'Požiadavka zlyhala') {
   const response = await fetch(url, options);
 
   if (!response.ok) {

@@ -23,13 +23,25 @@ function escapeHtml(input) {
 }
 
 function fetchTypeLabel(fetchType) {
-  return fetchType === 'manual' ? 'Manual' : 'Auto';
+  return fetchType === 'manual' ? 'Manuálne' : 'Automatické';
 }
 
 function trendLabel(trend) {
-  if (trend === 'up') return 'Stupa';
-  if (trend === 'down') return 'Klesa';
-  return 'Stabilna';
+  if (trend === 'up') return 'Stúpa';
+  if (trend === 'down') return 'Klesá';
+  return 'Stabilný';
+}
+
+function sourceLabel(source) {
+  if (source === 'aseko') {
+    return 'ASEKO';
+  }
+
+  if (source === 'simulated') {
+    return 'Simulované';
+  }
+
+  return '-';
 }
 
 function trendArrow(trend) {
@@ -42,7 +54,7 @@ function renderSummary(detail) {
   return `
     <section class="summary-grid">
       <article class="summary-item">
-        <span class="summary-label">Aktualna teplota</span>
+        <span class="summary-label">Aktuálna teplota</span>
         <span class="summary-value">${formatTemperature(detail.temperature)} °C</span>
       </article>
       <article class="summary-item">
@@ -63,7 +75,7 @@ function renderSummary(detail) {
       </article>
       <article class="summary-item">
         <span class="summary-label">Zdroj</span>
-        <span class="summary-value">${escapeHtml(detail.source || '-')}</span>
+        <span class="summary-value">${escapeHtml(sourceLabel(detail.source))}</span>
       </article>
     </section>
   `;
@@ -71,7 +83,7 @@ function renderSummary(detail) {
 
 function renderLogTable(fetchLog) {
   if (!fetchLog.length) {
-    return '<p class="status">Zatial nie su ziadne ulozene fetch data.</p>';
+    return '<p class="status">Zatiaľ nie sú uložené žiadne údaje o načítaní.</p>';
   }
 
   const rows = [...fetchLog]
@@ -92,8 +104,8 @@ function renderLogTable(fetchLog) {
       <table>
         <thead>
           <tr>
-            <th>Datum a cas</th>
-            <th>Typ fetchu</th>
+            <th>Dátum a čas</th>
+            <th>Typ načítania</th>
             <th>Teplota</th>
           </tr>
         </thead>
@@ -109,7 +121,7 @@ function render() {
   }
 
   if (state.loading) {
-    root.innerHTML = '<main class="detail-page"><p class="status">Nacitavam detail bazena...</p></main>';
+    root.innerHTML = '<main class="detail-page"><p class="status">Načítavam detail bazéna...</p></main>';
     return;
   }
 
@@ -121,7 +133,7 @@ function render() {
   const detail = state.detail;
 
   if (!detail) {
-    root.innerHTML = '<main class="detail-page"><p class="error">Detail bazena nie je dostupny.</p></main>';
+    root.innerHTML = '<main class="detail-page"><p class="error">Detail bazéna nie je dostupný.</p></main>';
     return;
   }
 
@@ -130,11 +142,11 @@ function render() {
   root.innerHTML = `
     <main class="detail-page">
       <header class="topbar">
-        <a href="/" class="back-link">← Spat na prehlad</a>
-        <button class="refresh-button" data-action="refresh" ${state.refreshing ? 'disabled' : ''}>Aktualizovat data</button>
+        <a href="/" class="back-link">← Späť na prehľad</a>
+        <button class="refresh-button" data-action="refresh" ${state.refreshing ? 'disabled' : ''}>Aktualizovať dáta</button>
       </header>
 
-      <h1 class="header-title">${escapeHtml(detail.name)} - detail</h1>
+      <h1 class="header-title">Detail bazéna: ${escapeHtml(detail.name)}</h1>
 
       ${renderSummary(detail)}
 
@@ -144,7 +156,7 @@ function render() {
       </section>
 
       <section class="panel">
-        <h2>Vsetky nacitane teploty</h2>
+        <h2>Všetky načítané teploty</h2>
         ${renderLogTable(fetchLog)}
       </section>
     </main>
@@ -162,7 +174,7 @@ async function fetchPoolDetails() {
   const data = await fetchJson(
     apiUrls.poolDetails(poolId),
     {},
-    'Nepodarilo sa nacitat detail bazena.',
+    'Nepodarilo sa načítať detail bazéna.',
   );
   return data.pool;
 }
@@ -174,7 +186,7 @@ async function loadDetail() {
 
   if (!Number.isInteger(poolId) || poolId <= 0) {
     state.loading = false;
-    state.error = 'Neplatne ID bazena v URL.';
+    state.error = 'Neplatné ID bazéna v URL.';
     render();
     return;
   }
@@ -182,7 +194,7 @@ async function loadDetail() {
   try {
     state.detail = await fetchPoolDetails();
   } catch (error) {
-    state.error = error instanceof Error ? error.message : 'Neznama chyba.';
+    state.error = error instanceof Error ? error.message : 'Neznáma chyba.';
   } finally {
     state.loading = false;
     render();
@@ -202,12 +214,12 @@ async function handleRefresh() {
     await fetchJson(
       apiUrls.refresh,
       { method: 'POST' },
-      'Nepodarilo sa vykonat manualny refresh.',
+      'Nepodarilo sa vykonať manuálnu aktualizáciu.',
     );
 
     state.detail = await fetchPoolDetails();
   } catch (error) {
-    state.error = error instanceof Error ? error.message : 'Neznama chyba.';
+    state.error = error instanceof Error ? error.message : 'Neznáma chyba.';
   } finally {
     state.refreshing = false;
     render();

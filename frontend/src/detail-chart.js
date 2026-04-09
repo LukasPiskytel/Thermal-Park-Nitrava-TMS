@@ -2,7 +2,7 @@ import { formatAxisTime, formatTemperature } from './shared/formatters';
 
 export function buildDetailChart(fetchLog, escapeHtml) {
   if (!Array.isArray(fetchLog) || fetchLog.length === 0) {
-    return '<p class="status">Nedostatok dat pre graf.</p>';
+    return '<p class="status">Nedostatok dát pre graf.</p>';
   }
 
   const width = 920;

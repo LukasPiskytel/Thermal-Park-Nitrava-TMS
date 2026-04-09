@@ -56,7 +56,7 @@ async function readPersistedState() {
       return null;
     }
 
-    console.warn(`[WARN] Failed to load persisted state: ${error.message}`);
+    console.warn(`[WARN] Nepodarilo sa načítať uložený stav: ${error.message}`);
     return null;
   }
 }
@@ -66,7 +66,7 @@ async function writePersistedState(statePayload) {
     await fs.mkdir(path.dirname(POOLS_STATE_FILE_PATH), { recursive: true });
     await fs.writeFile(POOLS_STATE_FILE_PATH, `${JSON.stringify(statePayload)}\n`, 'utf8');
   } catch (error) {
-    console.warn(`[WARN] Failed to persist state: ${error.message}`);
+    console.warn(`[WARN] Nepodarilo sa uložiť stav: ${error.message}`);
   }
 }
 
@@ -113,7 +113,7 @@ async function appendExpiredDataBackups(expiredEntries) {
         }
       } catch (error) {
         if (error.code !== 'ENOENT') {
-          console.warn(`[WARN] Failed to read backup ${backupFilePath}: ${error.message}`);
+          console.warn(`[WARN] Nepodarilo sa načítať zálohu ${backupFilePath}: ${error.message}`);
         }
       }
 
@@ -137,7 +137,7 @@ async function appendExpiredDataBackups(expiredEntries) {
       await fs.writeFile(backupFilePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
     }
   } catch (error) {
-    console.warn(`[WARN] Failed to write expired data backup: ${error.message}`);
+    console.warn(`[WARN] Nepodarilo sa zapísať zálohu starších dát: ${error.message}`);
   }
 }
 

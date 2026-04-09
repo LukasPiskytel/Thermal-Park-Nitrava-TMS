@@ -1,73 +1,71 @@
-# Navod: Spustenie projektu krok za krokom (macOS)
+# Návod: Spustenie projektu krok za krokom (macOS)
 
-Tento navod je urceny pre situaciu, ked Node.js este nie je nainstalovany.
+Tento návod je určený pre prípad, keď ešte nemáš nainštalovaný Node.js.
 
-## 1. Otvor Terminal
+## 1. Otvor Terminál
 
-Vsetky prikazy nizsie spustaj v Terminali.
+Všetky príkazy nižšie spúšťaj v aplikácii Terminál.
 
-## 2. Nainstaluj Homebrew (ak ho nemas)
+## 2. Nainštaluj Homebrew (ak ho ešte nemáš)
 
-Overenie:
+Over, či je Homebrew nainštalovaný:
 
 ```bash
 brew --version
 ```
 
-Ak prikaz nefunguje, nainstaluj Homebrew:
+Ak príkaz nefunguje, nainštaluj Homebrew:
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Po instalacii zatvor a znova otvor Terminal.
+Po inštalácii zatvor Terminál a otvor ho znova.
 
-## 3. Nainstaluj Node.js (LTS)
+## 3. Nainštaluj Node.js (LTS)
 
-Odporucana je LTS verzia (minimalne Node 20+).
+Odporúčaná je LTS verzia (minimálne Node 20+).
 
 ```bash
 brew install node
 ```
 
-Overenie instalacie:
+Overenie inštalácie:
 
 ```bash
 node -v
 npm -v
 ```
 
-Ak vidis verzie, instalacia je OK.
+Ak sa zobrazia verzie, inštalácia prebehla úspešne.
 
-## 4. Prejdi do root priecinka projektu
+## 4. Prejdi do koreňového priečinka projektu
 
 ```bash
 cd /Users/lukaspiskytel/projects/thermal-nitrava-temp/Thermal-Park-Nitrava-Temperature-Monitoring-System
 ```
 
-## 5. Nainstaluj zavislosti backendu
+## 5. Nainštaluj závislosti backendu
 
 ```bash
 cd backend
 npm install
 ```
 
-## 6. Nainstaluj zavislosti frontendu
-
-V novom prikaze alebo po navrate do rootu:
+## 6. Nainštaluj závislosti frontendu
 
 ```bash
 cd ../frontend
 npm install
 ```
 
-## 7. (Volitelne) Nastav ASEKO API kluc a device ID
+## 7. (Voliteľné) Nastav ASEKO API token a device ID
 
-Subor je v roote projektu:
+Konfiguračný súbor je v koreňovom priečinku projektu:
 
 - `aseko-api-key.txt`
 
-Format suboru:
+Príklad formátu:
 
 ```txt
 TVOJ_ASEKO_TOKEN
@@ -77,77 +75,78 @@ virivka-id=110178320
 detsky-bazen-id=110178006
 ```
 
-Poznamka:
-- Prvy riadok je token.
-- Dalsie riadky su mapovanie kluc=deviceId.
+Poznámky:
+- prvý riadok je token,
+- ďalšie riadky sú mapovanie `kľúč=deviceId`.
 
 ## 8. Spusti backend
 
-V prvom terminali:
+V prvom okne Terminálu:
 
 ```bash
 cd /Users/lukaspiskytel/projects/thermal-nitrava-temp/Thermal-Park-Nitrava-Temperature-Monitoring-System/backend
 npm run dev
 ```
 
-Backend pobezi na:
+Backend bude dostupný na adrese:
 
 - `http://localhost:3001`
 
 ## 9. Spusti frontend
 
-V druhom terminali:
+V druhom okne Terminálu:
 
 ```bash
 cd /Users/lukaspiskytel/projects/thermal-nitrava-temp/Thermal-Park-Nitrava-Temperature-Monitoring-System/frontend
 npm run dev
 ```
 
-Frontend standardne pobezi na:
+Frontend bude štandardne dostupný na adrese:
 
 - `http://localhost:5173`
 
-Otvor tento link v prehliadaci.
+Otvor tento odkaz v prehliadači.
 
-## 10. Co overit po spusteni
+## 10. Čo overiť po spustení
 
-1. Na hlavnej stranke vidis karty bazenov.
-2. Pri kazdej karte sa zobrazuje teplota a trend.
-3. Klik na kartu otvori detailnu stranku s grafom a logom.
+1. Na hlavnej stránke vidíš karty bazénov.
+2. Pri každej karte sa zobrazuje teplota a trend.
+3. Kliknutie na kartu otvorí detailnú stránku s grafom a logom.
 
-## 11. Ukladanie dat po restarte backendu
+## 11. Ukladanie dát po reštarte backendu
 
-Projekt uz ma perzistenciu stavu. To znamena, ze po restarte backendu:
+Projekt už obsahuje perzistentné ukladanie stavu. Po reštarte backendu preto:
 
-- predtym fetchnute data ostanu zachovane,
-- server ich nacita zo suboru pri starte,
-- stare data nad 24 hodin sa archivuju do JSON zaloh.
+- predtým načítané dáta zostanú zachované,
+- server ich pri štarte načíta zo súboru,
+- dáta staršie ako 24 hodín sa archivujú do JSON záloh.
 
-Ukladanie prebieha do priecinka:
+Úložisko je v priečinku:
 
 - `backend/data/`
 
-## 12. Riesenie beznych problemov
+## 12. Riešenie bežných problémov
 
 ### Chyba `429` z API
 
-- Nevolaj manual refresh prilis casto.
-- Automaticky fetch je nastaveny na 5 minut.
-- Pockaj aspon 5 minut medzi pokusmi, ak API rate-limituje poziadavky.
+- nepoužívaj manuálny refresh príliš často,
+- automatický fetch je nastavený na 5 minút,
+- pri rate limite počkaj aspoň 5 minút a skús to znova.
 
-### Port je obsadeny
+### Port je obsadený
 
-Ak je port 3001 alebo 5173 obsadeny, zastav stary proces (`Ctrl + C`) a spusti server znova.
+Ak je port 3001 alebo 5173 obsadený, zastav starý proces (`Ctrl + C`) a server spusti znova.
 
 ### Chyba `node: command not found`
 
-Node nie je nainstalovany alebo Terminal nevidi PATH po instalacii. Zatvor a znova otvor Terminal, potom skus:
+Node.js nie je nainštalovaný alebo Terminál po inštalácii nevidí `PATH`.
+Zatvor Terminál, otvor ho znova a over:
 
 ```bash
 node -v
 ```
 
-## 13. Produkcny build frontendu (volitelne)
+## 13. Produkčný build frontendu (voliteľné)
 
 ```bash
 cd /Users/lukaspiskytel/projects/thermal-nitrava-temp/Thermal-Park-Nitrava-Temperature-Monitoring-System/frontend
@@ -155,7 +154,7 @@ npm run build
 npm run preview
 ```
 
-## 14. Spustenie backendu bez nodemon (volitelne)
+## 14. Spustenie backendu bez nodemon (voliteľné)
 
 ```bash
 cd /Users/lukaspiskytel/projects/thermal-nitrava-temp/Thermal-Park-Nitrava-Temperature-Monitoring-System/backend

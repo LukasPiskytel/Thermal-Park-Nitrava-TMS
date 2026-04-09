@@ -190,11 +190,11 @@ async function initializeTemperatureService() {
   if (expiredEntries.length > 0) {
     await appendExpiredDataBackups(expiredEntries);
     await persistPoolsState();
-    console.log(`[INFO] Archived ${expiredEntries.length} expired records to daily JSON backups.`);
+    console.log(`[INFO] Archivovaných ${expiredEntries.length} starších záznamov do denných JSON záloh.`);
   }
 
   if (restored) {
-    console.log('[INFO] Persisted pool data loaded from disk.');
+    console.log('[INFO] Uložené údaje bazénov boli načítané z disku.');
   }
 
   await applyAsekoConfig();
@@ -220,11 +220,11 @@ async function applyAsekoConfig() {
       }
 
       if (!pool.deviceId) {
-        console.warn(`[WARN] Missing ASEKO device ID for pool ${pool.name} (${pool.deviceIdKey}).`);
+        console.warn(`[WARN] Chýba ASEKO device ID pre bazén ${pool.name} (${pool.deviceIdKey}).`);
       }
     });
   } catch (error) {
-    console.warn(`[WARN] Unable to read ASEKO config file: ${error.message}`);
+    console.warn(`[WARN] Nepodarilo sa načítať konfiguračný súbor ASEKO: ${error.message}`);
   }
 }
 
@@ -234,7 +234,7 @@ async function refreshPoolTemperature(pool, sampleAtMs, fetchType) {
   if (isAsekoPool) {
     if (!pool.deviceId) {
       pool.source = 'aseko';
-      console.warn(`[WARN] Missing device ID for ASEKO pool ${pool.name}.`);
+      console.warn(`[WARN] Chýba device ID pre ASEKO bazén ${pool.name}.`);
       return;
     }
 
@@ -244,7 +244,7 @@ async function refreshPoolTemperature(pool, sampleAtMs, fetchType) {
       return;
     } catch (error) {
       pool.source = 'aseko';
-      console.warn(`[WARN] ASEKO fetch failed for ${pool.name} (${pool.deviceId}): ${error.message}`);
+      console.warn(`[WARN] Načítanie z ASEKO zlyhalo pre ${pool.name} (${pool.deviceId}): ${error.message}`);
       return;
     }
   }

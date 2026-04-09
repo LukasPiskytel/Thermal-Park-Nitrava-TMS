@@ -24,14 +24,14 @@ app.get('/api/pools/:poolId/details', (req, res) => {
   const poolId = Number(req.params.poolId);
 
   if (!Number.isInteger(poolId)) {
-    res.status(400).json({ message: 'Neplatne ID bazena.' });
+    res.status(400).json({ message: 'Neplatné ID bazéna.' });
     return;
   }
 
   const pool = getPoolById(poolId);
 
   if (!pool) {
-    res.status(404).json({ message: 'Bazen nebol najdeny.' });
+    res.status(404).json({ message: 'Bazén nebol nájdený.' });
     return;
   }
 
@@ -43,8 +43,8 @@ app.post('/api/pools/refresh', async (_req, res) => {
     await runFetchCycle('manual');
     res.json(buildPoolsResponse(getLastFetchAt(), getPoolsSummary()));
   } catch (error) {
-    console.error(`[ERROR] Manual refresh failed: ${error.message}`);
-    res.status(500).json({ message: 'Nepodarilo sa aktualizovat teploty.' });
+    console.error(`[ERROR] Manuálna aktualizácia zlyhala: ${error.message}`);
+    res.status(500).json({ message: 'Nepodarilo sa aktualizovať teploty.' });
   }
 });
 
@@ -52,7 +52,7 @@ async function startServer() {
   await initializeTemperatureService();
 
   app.listen(PORT, () => {
-    console.log(`Temperature API running on http://localhost:${PORT}`);
+    console.log(`API teplôt je spustené na adrese http://localhost:${PORT}`);
   });
 
   runFetchCycle('auto');
@@ -62,6 +62,6 @@ async function startServer() {
 }
 
 startServer().catch((error) => {
-  console.error(`[ERROR] Failed to start server: ${error.message}`);
+  console.error(`[ERROR] Nepodarilo sa spustiť server: ${error.message}`);
   process.exit(1);
 });

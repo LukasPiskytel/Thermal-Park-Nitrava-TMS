@@ -47,7 +47,7 @@ function extractTemperature(payload) {
 
 async function fetchAsekoTemperature(deviceId, token) {
   if (!token) {
-    throw new Error('ASEKO API token is not configured');
+    throw new Error('ASEKO API token nie je nakonfigurovaný');
   }
 
   const url = `${ASEKO_API_BASE_URL}/${encodeURIComponent(deviceId)}`;
@@ -61,14 +61,14 @@ async function fetchAsekoTemperature(deviceId, token) {
   });
 
   if (!response.ok) {
-    throw new Error(`ASEKO request failed with status ${response.status}`);
+    throw new Error(`ASEKO požiadavka zlyhala so stavovým kódom ${response.status}`);
   }
 
   const payload = await response.json();
   const temperature = extractTemperature(payload);
 
   if (temperature === null) {
-    throw new Error('Missing statusValues.waterTemperature in ASEKO response');
+    throw new Error('V odpovedi ASEKO chýba hodnota statusValues.waterTemperature');
   }
 
   return temperature;
