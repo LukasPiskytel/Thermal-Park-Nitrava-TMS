@@ -2,10 +2,12 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 const API_URL = 'http://localhost:3001/api/pools';
+const REFRESH_API_URL = 'http://localhost:3001/api/pools/refresh';
 const FIVE_MINUTES = 5 * 60 * 1000;
 
 const pools = ref([]);
 const isLoading = ref(true);
+const isRefreshing = ref(false);
 const errorMessage = ref('');
 const fetchedAt = ref('');
 let timerId = null;
@@ -22,6 +24,11 @@ function trendText(trend) {
   return 'Stabilná';
 }
 
+function applyPoolsData(data) {
+  pools.value = data.pools ?? [];
+  fetchedAt.value = data.fetchedAt ?? '';
+}
+
 async function loadData() {
   try {
     const response = await fetch(API_URL);
@@ -31,12 +38,32 @@ async function loadData() {
     }
 
     const data = await response.json();
-    pools.value = data.pools ?? [];
-    fetchedAt.value = data.fetchedAt ?? '';
+    applyPoolsData(data);
     errorMessage.value = '';
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Neznáma chyba';
   } finally {
+    isLoading.value = false;
+  }
+}
+
+async function refreshNow() {
+  isRefreshing.value = true;
+
+  try {
+    const response = await fetch(REFRESH_API_URL, { method: 'POST' });
+
+    if (!response.ok) {
+      throw new Error('Nepodarilo sa aktualizovať teploty');
+    }
+
+    const data = await response.json();
+    applyPoolsData(data);
+    errorMessage.value = '';
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Neznáma chyba';
+  } finally {
+    isRefreshing.value = false;
     isLoading.value = false;
   }
 }
@@ -66,7 +93,17 @@ onBeforeUnmount(() => {
     <header class="hero">
       <p class="eyebrow">Thermal Park Nitrava</p>
       <h1>Monitorovanie teplôt bazénov (Zimná časť)</h1>
-      <p class="status">{{ fetchedAtLabel }}</p>
+      <div class="header-row">
+        <p class="status">{{ fetchedAtLabel }}</p>
+        <button
+          type="button"
+          class="refresh-button"
+          :disabled="isRefreshing"
+          @click="refreshNow"
+        >
+          Aktualizovať
+        </button>
+      </div>
     </header>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>

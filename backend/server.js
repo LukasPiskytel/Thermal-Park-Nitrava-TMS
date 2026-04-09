@@ -40,7 +40,7 @@ const pools = poolDefinitions.map((pool) => ({
 
 let lastFetchAt = null;
 let asekoToken = process.env.ASEKO_API_TOKEN || '';
-let isFetchingInProgress = false;
+let currentFetchPromise = null;
 
 function getTrend(history) {
   if (history.length < 3) {
@@ -195,29 +195,23 @@ async function fetchTemperatureData() {
 }
 
 async function runFetchCycle() {
-  if (isFetchingInProgress) {
-    return;
+  if (currentFetchPromise) {
+    return currentFetchPromise;
   }
 
-  isFetchingInProgress = true;
+  currentFetchPromise = (async () => {
+    await fetchTemperatureData();
+  })();
 
   try {
-    await fetchTemperatureData();
+    await currentFetchPromise;
   } finally {
-    isFetchingInProgress = false;
+    currentFetchPromise = null;
   }
 }
 
-loadAsekoConfigFromFile().finally(() => {
-  runFetchCycle();
-  setInterval(runFetchCycle, FETCH_INTERVAL_MS);
-});
-
-app.use(cors());
-app.use(express.json());
-
-app.get('/api/pools', (_req, res) => {
-  res.json({
+function buildPoolsResponse() {
+  return {
     fetchedAt: lastFetchAt ? lastFetchAt.toISOString() : null,
     nextFetchInMs: FETCH_INTERVAL_MS,
     pools: pools.map((pool) => ({
@@ -229,7 +223,29 @@ app.get('/api/pools', (_req, res) => {
       history: [...pool.history],
       source: pool.source,
     })),
-  });
+  };
+}
+
+loadAsekoConfigFromFile().finally(() => {
+  runFetchCycle();
+  setInterval(runFetchCycle, FETCH_INTERVAL_MS);
+});
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/api/pools', (_req, res) => {
+  res.json(buildPoolsResponse());
+});
+
+app.post('/api/pools/refresh', async (_req, res) => {
+  try {
+    await runFetchCycle();
+    res.json(buildPoolsResponse());
+  } catch (error) {
+    console.error(`[ERROR] Manual refresh failed: ${error.message}`);
+    res.status(500).json({ message: 'Nepodarilo sa aktualizovat teploty.' });
+  }
 });
 
 app.listen(PORT, () => {
