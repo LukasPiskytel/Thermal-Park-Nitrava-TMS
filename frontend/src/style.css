@@ -222,6 +222,12 @@ h1 {
   letter-spacing: 0.08em;
 }
 
+.discus-badge {
+  color: #ffe7a1;
+  border-color: rgba(255, 231, 161, 0.6);
+  background: rgba(255, 231, 161, 0.18);
+}
+
 .temperature {
   margin: 0.72rem 0 0.52rem;
   font-size: 1.7rem;

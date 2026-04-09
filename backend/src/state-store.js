@@ -42,7 +42,10 @@ function normalizeBackupRecord(rawEntry) {
     timestamp: new Date(fetchedAtMs).toISOString(),
     temperature: Number(temperature.toFixed(1)),
     fetchType: rawEntry.fetchType === 'manual' ? 'manual' : 'auto',
-    source: rawEntry.source === 'aseko' ? 'aseko' : 'simulated',
+    source:
+      rawEntry.source === 'aseko' || rawEntry.source === 'discus'
+        ? rawEntry.source
+        : 'simulated',
   };
 }
 

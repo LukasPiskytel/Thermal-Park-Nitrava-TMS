@@ -7,6 +7,9 @@ const STATS_WINDOW_MS = 24 * 60 * 60 * 1000;
 const ASEKO_API_BASE_URL = 'https://api.aseko.cloud/api/v1/paired-units';
 const ASEKO_KEY_FILE_PATH =
   process.env.ASEKO_KEY_FILE_PATH || path.resolve(__dirname, '..', '..', 'aseko-api-key.txt');
+const DISCUS_SALTY_POOL_ID = 3;
+const DISCUS_SALTY_POOL_CSV_URL =
+  process.env.DISCUS_SALTY_POOL_CSV_URL || 'https://teplomer.discus.sk/CBMHG191/data_001.csv';
 const POOLS_STATE_FILE_PATH =
   process.env.POOLS_STATE_FILE_PATH || path.resolve(__dirname, '..', 'data', 'pools-state.json');
 const POOLS_BACKUP_DIR_PATH =
@@ -39,6 +42,8 @@ module.exports = {
   STATS_WINDOW_MS,
   ASEKO_API_BASE_URL,
   ASEKO_KEY_FILE_PATH,
+  DISCUS_SALTY_POOL_ID,
+  DISCUS_SALTY_POOL_CSV_URL,
   POOLS_STATE_FILE_PATH,
   POOLS_BACKUP_DIR_PATH,
   ASEKO_CLIENT_HEADERS,

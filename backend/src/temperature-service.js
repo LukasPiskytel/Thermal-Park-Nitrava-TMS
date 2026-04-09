@@ -1,5 +1,11 @@
-const { POOL_DEFINITIONS, STATS_WINDOW_MS } = require('./config');
+const {
+  POOL_DEFINITIONS,
+  STATS_WINDOW_MS,
+  DISCUS_SALTY_POOL_ID,
+  DISCUS_SALTY_POOL_CSV_URL,
+} = require('./config');
 const { loadAsekoConfig, fetchAsekoTemperature } = require('./aseko-client');
+const { fetchDiscusTemperature } = require('./discus-client');
 const { readPersistedState, writePersistedState, appendExpiredDataBackups } = require('./state-store');
 const {
   generateSimulatedTemperature,
@@ -17,7 +23,7 @@ const pools = POOL_DEFINITIONS.map((pool) => ({
   history: [],
   statsHistory24h: [],
   fetchLog: [],
-  source: pool.deviceIdKey ? 'aseko' : 'simulated',
+  source: pool.id === DISCUS_SALTY_POOL_ID ? 'discus' : pool.deviceIdKey ? 'aseko' : 'simulated',
 }));
 
 let asekoToken = process.env.ASEKO_API_TOKEN || '';
@@ -57,7 +63,10 @@ function normalizeSample(rawSample) {
     temperature: Number(temperatureValue.toFixed(1)),
     fetchedAtMs: Math.trunc(fetchedAtMsValue),
     fetchType: rawSample.fetchType === 'manual' ? 'manual' : 'auto',
-    source: rawSample.source === 'aseko' ? 'aseko' : 'simulated',
+    source:
+      rawSample.source === 'aseko' || rawSample.source === 'discus'
+        ? rawSample.source
+        : 'simulated',
   };
 }
 
@@ -76,7 +85,11 @@ function restorePoolFromSnapshot(pool, snapshotPool, statsThresholdMs) {
     pool.deviceId = snapshotPool.deviceId.trim();
   }
 
-  if (snapshotPool.source === 'aseko' || snapshotPool.source === 'simulated') {
+  if (
+    snapshotPool.source === 'aseko' ||
+    snapshotPool.source === 'simulated' ||
+    snapshotPool.source === 'discus'
+  ) {
     pool.source = snapshotPool.source;
   }
 
@@ -229,6 +242,20 @@ async function applyAsekoConfig() {
 }
 
 async function refreshPoolTemperature(pool, sampleAtMs, fetchType) {
+  const isDiscusPool = pool.id === DISCUS_SALTY_POOL_ID;
+
+  if (isDiscusPool) {
+    try {
+      const discusTemperature = await fetchDiscusTemperature(DISCUS_SALTY_POOL_CSV_URL);
+      updatePoolTemperature(pool, discusTemperature, 'discus', sampleAtMs, fetchType);
+      return;
+    } catch (error) {
+      pool.source = 'discus';
+      console.warn(`[WARN] Načítanie z DISCUS zlyhalo pre ${pool.name}: ${error.message}`);
+      return;
+    }
+  }
+
   const isAsekoPool = Boolean(pool.deviceIdKey);
 
   if (isAsekoPool) {

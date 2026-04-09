@@ -37,6 +37,10 @@ function sourceLabel(source) {
     return 'ASEKO';
   }
 
+  if (source === 'discus') {
+    return 'DISCUS';
+  }
+
   if (source === 'simulated') {
     return 'Simulované';
   }
