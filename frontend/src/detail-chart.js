@@ -99,7 +99,7 @@ export function buildDetailChart(fetchLog, escapeHtml) {
         <text class="axis-label" x="20" y="${(height / 2).toFixed(2)}" transform="rotate(-90, 20, ${
           height / 2
         })">Teplota (°C)</text>
-        <text class="axis-label" x="${(width / 2).toFixed(2)}" y="${(height - 10).toFixed(2)}" text-anchor="middle">Cas</text>
+        <text class="axis-label" x="${(width / 2).toFixed(2)}" y="${(height - 10).toFixed(2)}" text-anchor="middle">Čas</text>
 
         <polyline class="line" points="${points}" />
         ${circles}
