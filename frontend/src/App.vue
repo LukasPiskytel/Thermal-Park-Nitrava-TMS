@@ -86,22 +86,22 @@ const fetchedAtLabel = computed(() => {
     return 'Čaká sa na načítanie dát...';
   }
 
-  return `Posledné načítanie: ${formatDateTimeHMS(fetchedAt.value)}`;
+  return `Posledná aktualizácia: ${formatDateTimeHMS(fetchedAt.value)}`;
 });
 
 const nextFetchLabel = computed(() => {
   if (!fetchedAt.value) {
-    return 'Ďalšie načítanie o --:--:--';
+    return 'Ďalšia aktualizácia o: --:--:--';
   }
 
   const fetchedAtMs = new Date(fetchedAt.value).getTime();
 
   if (Number.isNaN(fetchedAtMs)) {
-    return 'Ďalšie načítanie o --:--:--';
+    return 'Ďalšia aktualizácia o --:--:--';
   }
 
   const remainingMs = fetchedAtMs + nextFetchInMs.value - nowMs.value;
-  return `Ďalšie načítanie o ${formatCountdownHMS(remainingMs)}`;
+  return `Ďalšia aktualizácia o: ${formatCountdownHMS(remainingMs)}`;
 });
 
 onMounted(async () => {
