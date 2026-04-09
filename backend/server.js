@@ -6,13 +6,13 @@ const PORT = process.env.PORT || 3001;
 const FETCH_INTERVAL_MS = 5 * 60 * 1000;
 
 const poolNames = [
-  'Thermal Lagoon',
-  'Family Relax Pool',
-  'Mineral Healing Pool',
-  'Aroma Wellness Pool',
-  'Kids Adventure Pool',
-  'Hydro Massage Pool',
-  'Outdoor Panorama Pool',
+  'Zážitkový bazén',
+  'Výplavový bazén',
+  'Slaný bazén',
+  'Hypertermálny bazén',
+  'Vírivka',
+  'Detský bazén',
+  'Bazén pri jazere',
 ];
 
 const pools = poolNames.map((name, index) => ({
