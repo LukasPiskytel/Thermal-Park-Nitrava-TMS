@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3001/api/pools';
+const API_BASE_URL = '/api/pools';
 
 export const apiUrls = {
   pools: API_BASE_URL,
