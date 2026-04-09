@@ -29,12 +29,39 @@ function formatTemperature(value) {
   return value.toFixed(1);
 }
 
+function formatDateDMY(value) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '-';
+  }
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear());
+
+  return `${day}.${month}.${year}`;
+}
+
+function formatTimeHM(value) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '--:--';
+  }
+
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${hours}:${minutes}`;
+}
+
 function formatDateTime(value) {
   if (!value) {
     return '-';
   }
 
-  return new Date(value).toLocaleString('sk-SK');
+  return `${formatDateDMY(value)} ${formatTimeHM(value)}`;
 }
 
 function formatAxisTime(msValue) {
