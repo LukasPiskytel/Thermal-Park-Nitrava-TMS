@@ -11,7 +11,7 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://https://thermal-park-nitrava-tms-backend.vercel.app',
+        target: 'http://https://thermal-park-nitrava-tms-backend.vercel.app/',
         changeOrigin: true,
       },
     },
