@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://thermal-park-nitrava-tms-backend.vercel.app:' + (process.env.BACKEND_PORT || 3001) + '/api/pools';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://thermal-park-nitrava-tms-backend.vercel.app';
 
 export const apiUrls = {
   pools: API_BASE_URL,
