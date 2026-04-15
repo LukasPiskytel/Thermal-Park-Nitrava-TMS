@@ -56,7 +56,7 @@ async function fetchAsekoTemperature(deviceId, token) {
     headers: {
       accept: 'application/json',
       ...ASEKO_CLIENT_HEADERS,
-      Authorization: `Bearer ${eu_01K7M5QHK53VV95NTS6N3TWDDZ_X0T8TGXXKKRTMSPK1XYVZ44T27GG6QHQY1Y2M8V2N0P2QPC9}`,
+      Authorization: `Bearer ${token}`,
     },
   });
 
