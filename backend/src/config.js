@@ -6,7 +6,7 @@ const STATS_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 const ASEKO_API_BASE_URL = 'https://api.aseko.cloud/api/v1/paired-units';
 const ASEKO_KEY_FILE_PATH =
-  process.env.ASEKO_KEY_FILE_PATH || path.basename('aseko-api-key.txt');
+  process.env.ASEKO_KEY_FILE_PATH || path.resolve(__dirname, '..', 'data', 'aseko-api-key.txt');
 const DISCUS_SALTY_POOL_ID = 3;
 const DISCUS_SALTY_POOL_CSV_URL =
   process.env.DISCUS_SALTY_POOL_CSV_URL || 'https://teplomer.discus.sk/CBMHG191/data_001.csv';
