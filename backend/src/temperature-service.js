@@ -14,6 +14,8 @@ const {
   buildPoolDetails,
 } = require('./pool-utils');
 
+const NO_DATA_POOL_IDS = new Set([4, 7]);
+
 const pools = POOL_DEFINITIONS.map((pool) => ({
   id: pool.id,
   name: pool.name,
@@ -23,7 +25,13 @@ const pools = POOL_DEFINITIONS.map((pool) => ({
   history: [],
   statsHistory24h: [],
   fetchLog: [],
-  source: pool.id === DISCUS_SALTY_POOL_ID ? 'discus' : pool.deviceIdKey ? 'aseko' : 'simulated',
+  source: pool.id === DISCUS_SALTY_POOL_ID
+    ? 'discus'
+    : pool.deviceIdKey
+      ? 'aseko'
+      : NO_DATA_POOL_IDS.has(pool.id)
+        ? 'no-data'
+        : 'simulated',
 }));
 
 let asekoToken = process.env.ASEKO_API_TOKEN || '';
@@ -71,6 +79,15 @@ function normalizeSample(rawSample) {
 }
 
 function restorePoolFromSnapshot(pool, snapshotPool, statsThresholdMs) {
+  if (NO_DATA_POOL_IDS.has(pool.id)) {
+    pool.currentTemp = 0;
+    pool.history = [];
+    pool.statsHistory24h = [];
+    pool.fetchLog = [];
+    pool.source = 'no-data';
+    return;
+  }
+
   if (!snapshotPool || typeof snapshotPool !== 'object') {
     return;
   }
@@ -242,6 +259,15 @@ async function applyAsekoConfig() {
 }
 
 async function refreshPoolTemperature(pool, sampleAtMs, fetchType) {
+  if (NO_DATA_POOL_IDS.has(pool.id)) {
+    pool.currentTemp = 0;
+    pool.history = [];
+    pool.statsHistory24h = [];
+    pool.fetchLog = [];
+    pool.source = 'no-data';
+    return;
+  }
+
   const isDiscusPool = pool.id === DISCUS_SALTY_POOL_ID;
 
   if (isDiscusPool) {
