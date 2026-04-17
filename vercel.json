@@ -9,5 +9,11 @@
             "entrypoint": "backend",
             "routePrefix": "/"
         }
-    }
+    },
+    "crons": [
+        {
+            "path": "/api/pools/refresh",
+            "schedule": "*/5 * * * *"
+        }
+    ]
 }

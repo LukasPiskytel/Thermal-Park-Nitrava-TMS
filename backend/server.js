@@ -38,7 +38,18 @@ app.get('/api/pools/:poolId/details', (req, res) => {
   res.json(buildPoolDetailsResponse(getLastFetchAt(), getPoolDetails(poolId)));
 });
 
-app.post('/api/pools/refresh', async (_req, res) => {
+// Pôvodné POST-only obnovenie (ponechané pre porovnanie):
+// app.post('/api/pools/refresh', async (_req, res) => {
+//   try {
+//     await runFetchCycle('manual');
+//     res.json(buildPoolsResponse(getLastFetchAt(), getPoolsSummary()));
+//   } catch (error) {
+//     console.error(`[ERROR] Manuálna aktualizácia zlyhala: ${error.message}`);
+//     res.status(500).json({ message: 'Nepodarilo sa aktualizovať teploty.' });
+//   }
+// });
+
+async function handleRefreshRequest(_req, res) {
   try {
     await runFetchCycle('manual');
     res.json(buildPoolsResponse(getLastFetchAt(), getPoolsSummary()));
@@ -46,7 +57,10 @@ app.post('/api/pools/refresh', async (_req, res) => {
     console.error(`[ERROR] Manuálna aktualizácia zlyhala: ${error.message}`);
     res.status(500).json({ message: 'Nepodarilo sa aktualizovať teploty.' });
   }
-});
+}
+
+app.post('/api/pools/refresh', handleRefreshRequest);
+app.get('/api/pools/refresh', handleRefreshRequest);
 
 async function startServer() {
   await initializeTemperatureService();
