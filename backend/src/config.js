@@ -5,6 +5,9 @@ const FETCH_INTERVAL_MS = 5 * 60 * 1000;
 const STATS_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 const ASEKO_API_BASE_URL = 'https://api.aseko.cloud/api/v1/paired-units';
+const ASEKO_CONFIG_JSON_PATH =
+  process.env.ASEKO_CONFIG_JSON_PATH ||
+  path.resolve(__dirname, '..', 'config', 'aseko-config.json');
 const ASEKO_KEY_FILE_PATH =
   process.env.ASEKO_KEY_FILE_PATH || path.resolve(__dirname, '..', 'data', 'aseko-api-key.txt');
 const DISCUS_SALTY_POOL_ID = 3;
@@ -41,6 +44,7 @@ module.exports = {
   FETCH_INTERVAL_MS,
   STATS_WINDOW_MS,
   ASEKO_API_BASE_URL,
+  ASEKO_CONFIG_JSON_PATH,
   ASEKO_KEY_FILE_PATH,
   DISCUS_SALTY_POOL_ID,
   DISCUS_SALTY_POOL_CSV_URL,
