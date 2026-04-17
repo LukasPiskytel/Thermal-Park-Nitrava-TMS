@@ -13,10 +13,14 @@ const ASEKO_KEY_FILE_PATH =
 const DISCUS_SALTY_POOL_ID = 3;
 const DISCUS_SALTY_POOL_CSV_URL =
   process.env.DISCUS_SALTY_POOL_CSV_URL || 'https://teplomer.discus.sk/CBMHG191/data_001.csv';
+const RUNTIME_WRITABLE_DIR =
+  process.env.RUNTIME_WRITABLE_DIR || (process.env.VERCEL ? '/tmp' : path.resolve(__dirname, '..'));
 const POOLS_STATE_FILE_PATH =
-  process.env.POOLS_STATE_FILE_PATH || path.resolve(__dirname, '..', 'data', 'pools-state.json');
+  process.env.POOLS_STATE_FILE_PATH ||
+  path.resolve(RUNTIME_WRITABLE_DIR, 'backend-data', 'pools-state.json');
 const POOLS_BACKUP_DIR_PATH =
-  process.env.POOLS_BACKUP_DIR_PATH || path.resolve(__dirname, '..', 'data', 'backups');
+  process.env.POOLS_BACKUP_DIR_PATH ||
+  path.resolve(RUNTIME_WRITABLE_DIR, 'backend-data', 'backups');
 
 const ASEKO_CLIENT_HEADERS = {
   'X-Client-Name': 'Thermal Park Nitrava Temperature Monitoring System',
