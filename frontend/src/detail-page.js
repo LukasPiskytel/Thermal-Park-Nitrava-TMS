@@ -176,7 +176,7 @@ function render() {
 
 async function fetchPoolDetails() {
   const data = await fetchJson(
-    apiUrls.poolDetails(poolId),
+    `${apiUrls.poolDetails(poolId)}?t=${Date.now()}`,
     {},
     'Nepodarilo sa načítať detail bazéna.',
   );
@@ -216,7 +216,7 @@ async function handleRefresh() {
 
   try {
     await fetchJson(
-      apiUrls.refresh,
+      `${apiUrls.refresh}?t=${Date.now()}`,
       { method: 'POST' },
       'Nepodarilo sa vykonať manuálnu aktualizáciu.',
     );

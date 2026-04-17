@@ -52,7 +52,11 @@ function formatCountdownHMS(durationMs) {
 
 async function loadData() {
   try {
-    const data = await fetchJson(apiUrls.pools, {}, 'Nepodarilo sa načítať teplotné údaje');
+    const data = await fetchJson(
+      `${apiUrls.pools}?t=${Date.now()}`,
+      {},
+      'Nepodarilo sa načítať teplotné údaje',
+    );
     applyPoolsData(data);
     errorMessage.value = '';
   } catch (error) {
@@ -67,7 +71,7 @@ async function refreshNow() {
 
   try {
     const data = await fetchJson(
-      apiUrls.refresh,
+      `${apiUrls.refresh}?t=${Date.now()}`,
       { method: 'POST' },
       'Nepodarilo sa aktualizovať teploty',
     );

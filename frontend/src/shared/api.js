@@ -7,7 +7,10 @@ export const apiUrls = {
 };
 
 export async function fetchJson(url, options = {}, defaultErrorMessage = 'Požiadavka zlyhala') {
-  const response = await fetch(url, options);
+  const response = await fetch(url, {
+    cache: 'no-store',
+    ...options,
+  });
 
   if (!response.ok) {
     throw new Error(defaultErrorMessage);
