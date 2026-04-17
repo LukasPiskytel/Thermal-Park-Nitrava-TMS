@@ -15,6 +15,15 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+
+  next();
+});
 
 app.get('/api/pools', (_req, res) => {
   res.json(buildPoolsResponse(getLastFetchAt(), getPoolsSummary()));
