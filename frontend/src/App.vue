@@ -13,8 +13,10 @@ const errorMessage = ref('');
 const fetchedAt = ref('');
 const nextFetchInMs = ref(FIVE_MINUTES);
 const nowMs = ref(Date.now());
-let timerId = null;
+const RETRY_FETCH_MS = 30 * 1000;
+let refreshTimeoutId = null;
 let countdownTimerId = null;
+let currentLoadPromise = null;
 
 function trendIcon(trend) {
   if (trend === 'up') return '↑';
@@ -41,6 +43,46 @@ function applyPoolsData(data) {
   nowMs.value = Date.now();
 }
 
+function clearRefreshTimeout() {
+  if (refreshTimeoutId) {
+    window.clearTimeout(refreshTimeoutId);
+    refreshTimeoutId = null;
+  }
+}
+
+function getExpectedNextFetchAtMs() {
+  const fetchedAtMs = new Date(fetchedAt.value).getTime();
+
+  if (Number.isNaN(fetchedAtMs)) {
+    return Date.now() + nextFetchInMs.value;
+  }
+
+  return fetchedAtMs + nextFetchInMs.value;
+}
+
+function scheduleNextLoad(forcedDelayMs = null) {
+  clearRefreshTimeout();
+
+  const baseDelayMs = forcedDelayMs == null ? getExpectedNextFetchAtMs() - Date.now() : forcedDelayMs;
+  const safeDelayMs = Math.max(1000, baseDelayMs);
+
+  refreshTimeoutId = window.setTimeout(() => {
+    void loadData();
+  }, safeDelayMs);
+}
+
+function isFetchDue() {
+  return Date.now() >= getExpectedNextFetchAtMs();
+}
+
+function handleWakeUp() {
+  nowMs.value = Date.now();
+
+  if (isFetchDue()) {
+    void loadData();
+  }
+}
+
 function shouldForceRefresh(data) {
   if (!data || !data.fetchedAt) {
     return true;
@@ -54,9 +96,9 @@ function shouldForceRefresh(data) {
 
   const interval = Number(data.nextFetchInMs);
   const expectedIntervalMs = Number.isFinite(interval) && interval > 0 ? interval : FIVE_MINUTES;
-  const maxAgeMs = expectedIntervalMs + 60 * 1000;
+  const maxAgeMs = expectedIntervalMs;
 
-  return Date.now() - fetchedAtMs > maxAgeMs;
+  return Date.now() - fetchedAtMs >= maxAgeMs;
 }
 
 function formatCountdownHMS(durationMs) {
@@ -68,32 +110,62 @@ function formatCountdownHMS(durationMs) {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-async function loadData() {
+async function requestRefresh(defaultErrorMessage) {
   try {
-    const data = await fetchJson(
-      `${apiUrls.pools}?t=${Date.now()}`,
-      {},
-      'Nepodarilo sa načítať teplotné údaje',
+    return await fetchJson(
+      `${apiUrls.refresh}?t=${Date.now()}`,
+      { method: 'POST' },
+      defaultErrorMessage,
     );
-    applyPoolsData(data);
-    errorMessage.value = '';
+  } catch (_error) {
+    return fetchJson(
+      `${apiUrls.refresh}?t=${Date.now()}`,
+      { method: 'GET' },
+      defaultErrorMessage,
+    );
+  }
+}
 
-    if (shouldForceRefresh(data)) {
-      try {
-        const refreshed = await fetchJson(
-          `${apiUrls.refresh}?t=${Date.now()}`,
-          { method: 'POST' },
-          'Nepodarilo sa aktualizovať teploty',
-        );
-        applyPoolsData(refreshed);
-      } catch (error) {
-        console.warn('[WARN] Automaticka aktualizacia zlyhala:', error);
+async function loadData() {
+  if (currentLoadPromise) {
+    return currentLoadPromise;
+  }
+
+  currentLoadPromise = (async () => {
+    let hadError = false;
+
+    try {
+      const data = await fetchJson(
+        `${apiUrls.pools}?t=${Date.now()}`,
+        {},
+        'Nepodarilo sa načítať teplotné údaje',
+      );
+      applyPoolsData(data);
+      errorMessage.value = '';
+
+      if (shouldForceRefresh(data)) {
+        try {
+          const refreshed = await requestRefresh('Nepodarilo sa aktualizovať teploty');
+          applyPoolsData(refreshed);
+        } catch (error) {
+          hadError = true;
+          errorMessage.value = error instanceof Error ? error.message : 'Neznáma chyba';
+          console.warn('[WARN] Automaticka aktualizacia zlyhala:', error);
+        }
       }
+    } catch (error) {
+      hadError = true;
+      errorMessage.value = error instanceof Error ? error.message : 'Neznáma chyba';
+    } finally {
+      isLoading.value = false;
+      scheduleNextLoad(hadError ? RETRY_FETCH_MS : null);
     }
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Neznáma chyba';
+  })();
+
+  try {
+    await currentLoadPromise;
   } finally {
-    isLoading.value = false;
+    currentLoadPromise = null;
   }
 }
 
@@ -101,11 +173,7 @@ async function refreshNow() {
   isRefreshing.value = true;
 
   try {
-    const data = await fetchJson(
-      `${apiUrls.refresh}?t=${Date.now()}`,
-      { method: 'POST' },
-      'Nepodarilo sa aktualizovať teploty',
-    );
+    const data = await requestRefresh('Nepodarilo sa aktualizovať teploty');
     applyPoolsData(data);
     errorMessage.value = '';
   } catch (error) {
@@ -113,6 +181,7 @@ async function refreshNow() {
   } finally {
     isRefreshing.value = false;
     isLoading.value = false;
+    scheduleNextLoad();
   }
 }
 
@@ -139,22 +208,24 @@ const nextFetchLabel = computed(() => {
   return `Ďalšia aktualizácia o: ${formatCountdownHMS(remainingMs)}`;
 });
 
-onMounted(async () => {
-  await loadData();
-  timerId = window.setInterval(loadData, FIVE_MINUTES);
+onMounted(() => {
+  void loadData();
   countdownTimerId = window.setInterval(() => {
     nowMs.value = Date.now();
   }, 1000);
+  window.addEventListener('visibilitychange', handleWakeUp);
+  window.addEventListener('focus', handleWakeUp);
 });
 
 onBeforeUnmount(() => {
-  if (timerId) {
-    window.clearInterval(timerId);
-  }
+  clearRefreshTimeout();
 
   if (countdownTimerId) {
     window.clearInterval(countdownTimerId);
   }
+
+  window.removeEventListener('visibilitychange', handleWakeUp);
+  window.removeEventListener('focus', handleWakeUp);
 });
 </script>
 

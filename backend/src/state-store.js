@@ -1,37 +1,64 @@
 const fs = require('fs/promises');
 const path = require('path');
-const { Readable } = require('node:stream');
-const { get, put } = require('@vercel/blob');
 const { POOLS_STATE_FILE_PATH, POOLS_BACKUP_DIR_PATH } = require('./config');
 
-const BLOB_ACCESS = 'private';
+const BLOB_ACCESS =
+  (process.env.POOLS_BLOB_ACCESS || 'private').toLowerCase() === 'public' ? 'public' : 'private';
 const BLOB_STATE_PATH = process.env.POOLS_STATE_BLOB_PATH || 'pools-state.json';
 const BLOB_BACKUP_PREFIX = process.env.POOLS_BACKUP_BLOB_PREFIX || 'backups';
-const useBlobStorage = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+const BLOB_TOKEN = process.env.POOLS_BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN || '';
+const useBlobStorage = Boolean(BLOB_TOKEN);
+let blobSdkPromise = null;
+
+function getBlobOptions(options = {}) {
+  if (!BLOB_TOKEN) {
+    return options;
+  }
+
+  return {
+    ...options,
+    token: BLOB_TOKEN,
+  };
+}
+
+async function getBlobSdk() {
+  if (!blobSdkPromise) {
+    blobSdkPromise = import('@vercel/blob');
+  }
+
+  return blobSdkPromise;
+}
 
 async function readStreamText(stream) {
   if (!stream) {
     return '';
   }
 
-  if (typeof Readable.fromWeb === 'function') {
-    const nodeStream = Readable.fromWeb(stream);
+  try {
+    return await new Response(stream).text();
+  } catch (_error) {
+    if (Buffer.isBuffer(stream)) {
+      return stream.toString('utf8');
+    }
+
+    if (typeof stream[Symbol.asyncIterator] !== 'function') {
+      return '';
+    }
+
     const chunks = [];
 
-    for await (const chunk of nodeStream) {
+    for await (const chunk of stream) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     }
 
     return Buffer.concat(chunks).toString('utf8');
   }
-
-  const response = new Response(stream);
-  return response.text();
 }
 
 async function readJsonFromBlob(pathname) {
   try {
-    const result = await get(pathname, { access: BLOB_ACCESS });
+    const { get } = await getBlobSdk();
+    const result = await get(pathname, getBlobOptions({ access: BLOB_ACCESS }));
 
     if (!result || result.statusCode !== 200 || !result.stream) {
       return null;
@@ -52,8 +79,9 @@ async function readJsonFromBlob(pathname) {
 
 async function writeJsonToBlob(pathname, payload, cacheControlMaxAge = 60) {
   try {
+    const { put } = await getBlobSdk();
     await put(pathname, JSON.stringify(payload), {
-      access: BLOB_ACCESS,
+      ...getBlobOptions({ access: BLOB_ACCESS }),
       allowOverwrite: true,
       contentType: 'application/json',
       cacheControlMaxAge,
