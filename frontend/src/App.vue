@@ -41,6 +41,24 @@ function applyPoolsData(data) {
   nowMs.value = Date.now();
 }
 
+function shouldForceRefresh(data) {
+  if (!data || !data.fetchedAt) {
+    return true;
+  }
+
+  const fetchedAtMs = new Date(data.fetchedAt).getTime();
+
+  if (Number.isNaN(fetchedAtMs)) {
+    return true;
+  }
+
+  const interval = Number(data.nextFetchInMs);
+  const expectedIntervalMs = Number.isFinite(interval) && interval > 0 ? interval : FIVE_MINUTES;
+  const maxAgeMs = expectedIntervalMs + 60 * 1000;
+
+  return Date.now() - fetchedAtMs > maxAgeMs;
+}
+
 function formatCountdownHMS(durationMs) {
   const totalSeconds = Math.max(0, Math.ceil(durationMs / 1000));
   const hours = Math.floor(totalSeconds / 3600);
@@ -59,6 +77,19 @@ async function loadData() {
     );
     applyPoolsData(data);
     errorMessage.value = '';
+
+    if (shouldForceRefresh(data)) {
+      try {
+        const refreshed = await fetchJson(
+          `${apiUrls.refresh}?t=${Date.now()}`,
+          { method: 'POST' },
+          'Nepodarilo sa aktualizovať teploty',
+        );
+        applyPoolsData(refreshed);
+      } catch (error) {
+        console.warn('[WARN] Automaticka aktualizacia zlyhala:', error);
+      }
+    }
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Neznáma chyba';
   } finally {

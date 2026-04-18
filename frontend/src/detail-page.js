@@ -5,6 +5,7 @@ import { formatDateTime, formatTemperature } from './shared/formatters';
 const root = document.querySelector('#detail-root');
 const params = new URLSearchParams(window.location.search);
 const poolId = Number(params.get('poolId') || 6);
+const FIVE_MINUTES = 5 * 60 * 1000;
 
 const state = {
   loading: true,
@@ -174,13 +175,28 @@ function render() {
   }
 }
 
+function shouldForceRefresh(payload) {
+  if (!payload || !payload.fetchedAt) {
+    return true;
+  }
+
+  const fetchedAtMs = new Date(payload.fetchedAt).getTime();
+
+  if (Number.isNaN(fetchedAtMs)) {
+    return true;
+  }
+
+  const maxAgeMs = FIVE_MINUTES + 60 * 1000;
+  return Date.now() - fetchedAtMs > maxAgeMs;
+}
+
 async function fetchPoolDetails() {
   const data = await fetchJson(
     `${apiUrls.poolDetails(poolId)}?t=${Date.now()}`,
     {},
     'Nepodarilo sa načítať detail bazéna.',
   );
-  return data.pool;
+  return data;
 }
 
 async function loadDetail() {
@@ -196,7 +212,22 @@ async function loadDetail() {
   }
 
   try {
-    state.detail = await fetchPoolDetails();
+    let response = await fetchPoolDetails();
+
+    if (shouldForceRefresh(response)) {
+      try {
+        await fetchJson(
+          `${apiUrls.refresh}?t=${Date.now()}`,
+          { method: 'POST' },
+          'Nepodarilo sa vykonať manuálnu aktualizáciu.',
+        );
+        response = await fetchPoolDetails();
+      } catch (error) {
+        console.warn('[WARN] Automaticka aktualizacia detailu zlyhala:', error);
+      }
+    }
+
+    state.detail = response.pool;
   } catch (error) {
     state.error = error instanceof Error ? error.message : 'Neznáma chyba.';
   } finally {
@@ -221,7 +252,8 @@ async function handleRefresh() {
       'Nepodarilo sa vykonať manuálnu aktualizáciu.',
     );
 
-    state.detail = await fetchPoolDetails();
+    const response = await fetchPoolDetails();
+    state.detail = response.pool;
   } catch (error) {
     state.error = error instanceof Error ? error.message : 'Neznáma chyba.';
   } finally {
@@ -231,3 +263,11 @@ async function handleRefresh() {
 }
 
 void loadDetail();
+
+const refreshTimerId = window.setInterval(() => {
+  void loadDetail();
+}, FIVE_MINUTES);
+
+window.addEventListener('beforeunload', () => {
+  window.clearInterval(refreshTimerId);
+});
