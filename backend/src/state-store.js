@@ -1,6 +1,67 @@
 const fs = require('fs/promises');
 const path = require('path');
+const { Readable } = require('node:stream');
+const { get, put } = require('@vercel/blob');
 const { POOLS_STATE_FILE_PATH, POOLS_BACKUP_DIR_PATH } = require('./config');
+
+const BLOB_ACCESS = 'private';
+const BLOB_STATE_PATH = process.env.POOLS_STATE_BLOB_PATH || 'pools-state.json';
+const BLOB_BACKUP_PREFIX = process.env.POOLS_BACKUP_BLOB_PREFIX || 'backups';
+const useBlobStorage = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+
+async function readStreamText(stream) {
+  if (!stream) {
+    return '';
+  }
+
+  if (typeof Readable.fromWeb === 'function') {
+    const nodeStream = Readable.fromWeb(stream);
+    const chunks = [];
+
+    for await (const chunk of nodeStream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+
+    return Buffer.concat(chunks).toString('utf8');
+  }
+
+  const response = new Response(stream);
+  return response.text();
+}
+
+async function readJsonFromBlob(pathname) {
+  try {
+    const result = await get(pathname, { access: BLOB_ACCESS });
+
+    if (!result || result.statusCode !== 200 || !result.stream) {
+      return null;
+    }
+
+    const rawContent = await readStreamText(result.stream);
+    const parsed = JSON.parse(rawContent);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch (error) {
+    if (error && error.name === 'BlobNotFoundError') {
+      return null;
+    }
+
+    console.warn(`[WARN] Nepodarilo sa nacitat blob ${pathname}: ${error.message}`);
+    return null;
+  }
+}
+
+async function writeJsonToBlob(pathname, payload, cacheControlMaxAge = 60) {
+  try {
+    await put(pathname, JSON.stringify(payload), {
+      access: BLOB_ACCESS,
+      allowOverwrite: true,
+      contentType: 'application/json',
+      cacheControlMaxAge,
+    });
+  } catch (error) {
+    console.warn(`[WARN] Nepodarilo sa zapisat blob ${pathname}: ${error.message}`);
+  }
+}
 
 function formatBackupDateKey(msValue) {
   const date = new Date(msValue);
@@ -50,6 +111,10 @@ function normalizeBackupRecord(rawEntry) {
 }
 
 async function readPersistedState() {
+  if (useBlobStorage) {
+    return readJsonFromBlob(BLOB_STATE_PATH);
+  }
+
   try {
     const rawContent = await fs.readFile(POOLS_STATE_FILE_PATH, 'utf8');
     const parsed = JSON.parse(rawContent);
@@ -65,6 +130,11 @@ async function readPersistedState() {
 }
 
 async function writePersistedState(statePayload) {
+  if (useBlobStorage) {
+    await writeJsonToBlob(BLOB_STATE_PATH, statePayload, 60);
+    return;
+  }
+
   try {
     await fs.mkdir(path.dirname(POOLS_STATE_FILE_PATH), { recursive: true });
     await fs.writeFile(POOLS_STATE_FILE_PATH, `${JSON.stringify(statePayload)}\n`, 'utf8');
@@ -95,6 +165,47 @@ async function appendExpiredDataBackups(expiredEntries) {
 
     groupedByDate.get(dateKey).push(entry);
   });
+
+  if (useBlobStorage) {
+    for (const [dateKey, entriesForDate] of groupedByDate.entries()) {
+      const backupPath = `${BLOB_BACKUP_PREFIX}/${dateKey}.json`;
+      let createdAt = new Date().toISOString();
+      let existingRecords = [];
+
+      const parsedExisting = await readJsonFromBlob(backupPath);
+
+      if (parsedExisting) {
+        existingRecords = parseBackupRecords(parsedExisting)
+          .map((entry) => normalizeBackupRecord(entry))
+          .filter(Boolean);
+
+        if (parsedExisting && typeof parsedExisting === 'object' && parsedExisting.createdAt) {
+          createdAt = parsedExisting.createdAt;
+        }
+      }
+
+      const dedupe = new Map();
+      [...existingRecords, ...entriesForDate].forEach((entry) => {
+        const key = `${entry.poolId}|${entry.fetchedAtMs}|${entry.temperature}|${entry.fetchType}|${entry.source}`;
+
+        if (!dedupe.has(key)) {
+          dedupe.set(key, entry);
+        }
+      });
+
+      const mergedRecords = [...dedupe.values()].sort((a, b) => a.fetchedAtMs - b.fetchedAtMs);
+      const payload = {
+        backupDate: dateKey,
+        createdAt,
+        updatedAt: new Date().toISOString(),
+        records: mergedRecords,
+      };
+
+      await writeJsonToBlob(backupPath, payload, 300);
+    }
+
+    return;
+  }
 
   try {
     await fs.mkdir(POOLS_BACKUP_DIR_PATH, { recursive: true });
