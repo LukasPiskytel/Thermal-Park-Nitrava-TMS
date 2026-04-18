@@ -1,4 +1,6 @@
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/pools';
+const PROD_BACKEND_API_BASE_URL = 'https://thermal-park-nitrava-tms-backend.vercel.app/api/pools';
+const rawBaseUrl =
+  import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? PROD_BACKEND_API_BASE_URL : '/api/pools');
 const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
 export const apiUrls = {

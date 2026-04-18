@@ -2,7 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const { POOLS_STATE_FILE_PATH, POOLS_BACKUP_DIR_PATH } = require('./config');
 
-const BLOB_ACCESS =
+const PRIMARY_BLOB_ACCESS =
   (process.env.POOLS_BLOB_ACCESS || 'private').toLowerCase() === 'public' ? 'public' : 'private';
 const BLOB_STATE_PATH = process.env.POOLS_STATE_BLOB_PATH || 'pools-state.json';
 const BLOB_BACKUP_PREFIX = process.env.POOLS_BACKUP_BLOB_PREFIX || 'backups';
@@ -19,6 +19,14 @@ function getBlobOptions(options = {}) {
     ...options,
     token: BLOB_TOKEN,
   };
+}
+
+function getBlobAccessModes() {
+  if (PRIMARY_BLOB_ACCESS === 'public') {
+    return ['public', 'private'];
+  }
+
+  return ['private', 'public'];
 }
 
 async function getBlobSdk() {
@@ -56,38 +64,56 @@ async function readStreamText(stream) {
 }
 
 async function readJsonFromBlob(pathname) {
-  try {
-    const { get } = await getBlobSdk();
-    const result = await get(pathname, getBlobOptions({ access: BLOB_ACCESS }));
+  const { get } = await getBlobSdk();
+  let lastError = null;
 
-    if (!result || result.statusCode !== 200 || !result.stream) {
-      return null;
+  for (const access of getBlobAccessModes()) {
+    try {
+      const result = await get(pathname, getBlobOptions({ access }));
+
+      if (!result || result.statusCode !== 200 || !result.stream) {
+        return null;
+      }
+
+      const rawContent = await readStreamText(result.stream);
+      const parsed = JSON.parse(rawContent);
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (error) {
+      if (error && error.name === 'BlobNotFoundError') {
+        return null;
+      }
+
+      lastError = error;
     }
-
-    const rawContent = await readStreamText(result.stream);
-    const parsed = JSON.parse(rawContent);
-    return parsed && typeof parsed === 'object' ? parsed : null;
-  } catch (error) {
-    if (error && error.name === 'BlobNotFoundError') {
-      return null;
-    }
-
-    console.warn(`[WARN] Nepodarilo sa nacitat blob ${pathname}: ${error.message}`);
-    return null;
   }
+
+  if (lastError) {
+    console.warn(`[WARN] Nepodarilo sa nacitat blob ${pathname}: ${lastError.message}`);
+  }
+
+  return null;
 }
 
 async function writeJsonToBlob(pathname, payload, cacheControlMaxAge = 60) {
-  try {
-    const { put } = await getBlobSdk();
-    await put(pathname, JSON.stringify(payload), {
-      ...getBlobOptions({ access: BLOB_ACCESS }),
-      allowOverwrite: true,
-      contentType: 'application/json',
-      cacheControlMaxAge,
-    });
-  } catch (error) {
-    console.warn(`[WARN] Nepodarilo sa zapisat blob ${pathname}: ${error.message}`);
+  const { put } = await getBlobSdk();
+  let lastError = null;
+
+  for (const access of getBlobAccessModes()) {
+    try {
+      await put(pathname, JSON.stringify(payload), {
+        ...getBlobOptions({ access }),
+        allowOverwrite: true,
+        contentType: 'application/json',
+        cacheControlMaxAge,
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError) {
+    console.warn(`[WARN] Nepodarilo sa zapisat blob ${pathname}: ${lastError.message}`);
   }
 }
 
