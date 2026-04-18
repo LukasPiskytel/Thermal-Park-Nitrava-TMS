@@ -272,7 +272,7 @@ onBeforeUnmount(() => {
               loading="lazy"
             />
             <span v-else-if="pool.source === 'discus'" class="sim-badge discus-badge">DISCUS</span>
-            <span v-else class="sim-badge">SIM</span>
+            <span v-else class="sim-badge">OFF</span>
           </div>
         </div>
         <p class="temperature" :class="`temp-${pool.trend}`">
